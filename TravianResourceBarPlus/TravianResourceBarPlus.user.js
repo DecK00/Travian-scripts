@@ -100,6 +100,7 @@ var RB = new Object();
 	RB.village_PPH = [0,0,0,0,0,0,0,0,0,0,0,0,0];
 	RB.overview = [-1,'0'];
 	RB.wantsMem = [0,0,0,0,0,0,0,0,0,0];
+	RB.wantsTrade = [0,0,0,0];
 //						1		2				3				4			5					6				7			8		9			10		11		12	  13, 14	15		16				17				18				19				20					21			22		23		24				25				26			27		28			29			30		31			32
 	RB.dictionary = [0,'Ally','Merchants','Tournament Square','Duration','resource balance','Rally Point','Marketplace','Barracks','Stable','Workshop','Buy','Attacks',0,'at ','Map','Reinforcement','Attack: Normal','Attack: Raid','Culture points','Crop consumption','capacity','Farm List','','Great Barracks','Great Stable','Hospital','Asclepeion','Harbor','Town Hall','Smithy','Overview','Send Troops'];
 	RB.dictFL = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -223,6 +224,10 @@ DICT = {
 		dorf12links : "Show &laquo;village inside and outside&raquo; icons",
 		vtcoords : "Show village coordinates in village list",
 		vtnames : "Show village names in village list",
+		vtlinks : "Show village links in village list window",
+		ovlinks : "Show village links in villages overview",
+		ovcrop : "Show crop production in warehouse overview",
+		awakeclock : "Show alarm clock in village list",
 		analyzer : "World analyzer",
 		qlicons : "Show Quick Link icons",
 		bigicon : "Show the old Quick Link icons window",
@@ -352,6 +357,10 @@ DICT = {
 		dorf12links : "Показывать иконки &laquo;деревня внутри и снаружи&raquo;",
 		vtcoords : "Показывать координаты деревень в списке деревень",
 		vtnames : "Показывать названия деревень в списке деревень",
+		vtlinks : "Показывать ссылки деревень в окне списка деревень",
+		ovlinks : "Показывать ссылки деревень в обзоре деревень",
+		ovcrop : "Показывать производство зерна в обзоре склада",
+		awakeclock : "Показывать будильник в списке деревень",
 		analyzer : "Анализатор мира",
 		qlicons : "Показывать иконки быстрых ссылок",
 		bigicon : "Показывать Пункт сбора икон",
@@ -3271,6 +3280,11 @@ function needed_show( base ) {
 		saveCookie('Mem', 'wantsMem');
 		alert( noplace +"\nSaved: "+ RB.wantsMem[0] +" | "+ RB.wantsMem[1] +" | "+ RB.wantsMem[2] +" | "+ RB.wantsMem[3] );
 	}
+	function saveWantsTrade ( tradeResM ) {
+		RB.wantsTrade = tradeResM.slice();
+		saveCookie('Trade', 'wantsTrade');
+		alert( "Trade saved: "+ RB.wantsTrade[0] +" | "+ RB.wantsTrade[1] +" | "+ RB.wantsTrade[2] +" | "+ RB.wantsTrade[3] );
+	}
 	function showPlusTimer () {
 		if (RB.Setup[10] > 2 && $g('merchantsOnTheWay')) return;
 		var j=timerB.length;
@@ -3321,6 +3335,17 @@ function needed_show( base ) {
 		var memP = $a(' (M+)',[['href',jsVoid]]);
 		memP.addEventListener('click', function(x) { return function() { saveWantsMem(x); }}(wantsResMemP), 0);
 		beforeThis.appendChild(memP);
+	}
+
+	var tradeResMem = [wantsResMem[5],wantsResMem[6],wantsResMem[7],wantsResMem[8]];
+	var tradeResMemP = [parseInt(RB.wantsTrade[0])+tradeResMem[0],parseInt(RB.wantsTrade[1])+tradeResMem[1],parseInt(RB.wantsTrade[2])+tradeResMem[2],parseInt(RB.wantsTrade[3])+tradeResMem[3]];
+	var memT = $a(' (T)',[['href',jsVoid]]);
+	memT.addEventListener('click', function(x) { return function() { saveWantsTrade(x); }}(tradeResMem), 0);
+	beforeThis.appendChild(memT);
+	if( parseInt(RB.wantsTrade[0])+parseInt(RB.wantsTrade[1])+parseInt(RB.wantsTrade[2])+parseInt(RB.wantsTrade[3]) > 0 ) {
+		var memTP = $a(' (T+)',[['href',jsVoid]]);
+		memTP.addEventListener('click', function(x) { return function() { saveWantsTrade(x); }}(tradeResMemP), 0);
+		beforeThis.appendChild(memTP);
 	}
 
 	return beforeThis;
@@ -4500,6 +4525,7 @@ function loadAllCookie () {
 	loadVCookie ( 'VV', 'village_Var' );
 	loadCookie ( 'OV', 'overview' );
 	loadCookie ( 'Mem', 'wantsMem' );
+	loadCookie ( 'Trade', 'wantsTrade' );
 	loadCookie ( 'DictTR', 'dictTR' );
 	loadCookie ( 'AS', 'serversAN' );
 
@@ -4834,7 +4860,7 @@ function vlist_addButtonsT4 () {
 			for( var i=0; i<villages.length; i++) {
 				vLink[i] = $a($gc("name",villages[i])[0].innerHTML,[['href',linkVSwitch[i]]]);
 				var cl = villages_id[i]==village_aid?"dot hl":"dot";
-				vilB.appendChild($em('TR',[$c('&#x25CF;',[['class',cl]]),RB.Setup[60] != 0 ? $c($ee('DIV',vLink[i])) : $c('',[['style','padding:0;']]),RB.Setup[38] != 0 ? $c($a(printCoords(villages_id[i]),[['href',linkVSwitch[i]]])) : '',$c(addDorf12Links(linkVSwitch[i],0),[['style','width:40px;']]),$c(addARLinks(villages_id[i],0))]));
+				vilB.appendChild($em('TR',[$c('&#x25CF;',[['class',cl]]),RB.Setup[60] != 0 ? $c($ee('DIV',vLink[i])) : $c('',[['style','padding:0;']]),RB.Setup[38] != 0 ? $c($a(printCoords(villages_id[i]),[['href',linkVSwitch[i]]])) : '',RB.Setup[61] != 0 ? $c(addDorf12Links(linkVSwitch[i],0),[['style','width:40px;']]) : '',RB.Setup[61] != 0 ? $c(addARLinks(villages_id[i],0)) : '']));
 			}
 			vilT.appendChild(vilB);
 			if( RB.Setup[21] == 1 ) makeFloatD(vilT,7);
@@ -5401,7 +5427,7 @@ RB.dSetup = [//	0	1	2	3	4	5	6	7	8	9
 	/* 3 */		0,	15,	1,	1,	0,	0,	1,	1,	1,	0,
 	/* 4 */		'',	'',	'',	'',	'',	0,	0,  0,  0,  1,
 	/* 5 */		0,	0,	0,	0,	0,	0,	0,  0,  0,  0,
-	/* 6 */		1
+	/* 6 */		1,	1,	1,	1,	1
 			];
 RB.Setup = RB.dSetup.slice();
 
@@ -5443,6 +5469,8 @@ function rbSetup () {
 			['SEL',16, gtext("qlicons"), gtext('addvtableo')],
 			['SEL',51, gtext("bigicon"), gtext('addvtableo')],
 			['CB',34, gtext("openoview")],
+			['CB',62, gtext("ovlinks")],
+			['CB',63, gtext("ovcrop")],
 			['CB',17, gtext("opennote")],
 			['SEL',35, gtext("notesize"), ['40x15','55x20','70x30','60x45','40x8','30x34']],
 		['I', 0, gtext("villagelist")],
@@ -5450,6 +5478,8 @@ function rbSetup () {
 			['SEL',14, gtext("buildand"), gtext('buildands'), gtext("buildandh")],
 			['CB',60, gtext("vtnames")],
 			['CB',38, gtext("vtcoords")],
+			['CB',61, gtext("vtlinks")],
+			['CB',64, gtext("awakeclock")],
 		['I', 0, gtext("resbar")],
 			['CB', 4, gtext("showres")],
 			['T', 6, gtext("redbl")],
@@ -5613,7 +5643,7 @@ function overviewWarehouse () {
 	var refreshImg = $e('IMG',[['src', img_refr],['title',gtext("refresh")],['style','cursor:pointer;']]);
 	refreshImg.addEventListener('click', refreshOview, true);
 	var newTR = $em('TR',[$c(refreshImg),$c($e('i',[['class','r1']])),$c($e('i',[['class','r2']])),$c($e('i',[['class','r3']])),
-		$c(trImg('&nbsp;')),$c($e('i',[['class','r4']])),$c(trImg('&nbsp;')),$c($e('i',[['class','r5']])),$c('')]);
+		$c(trImg('&nbsp;')),$c($e('i',[['class','r4']])),$c(trImg('&nbsp;')),RB.Setup[63] != 0 ? $c($e('i',[['class','r5']])) : '',$c('')]);
 	newTHead.appendChild(newTR);
 	overviewD.appendChild(newTHead);
 
@@ -5659,9 +5689,11 @@ function overviewWarehouse () {
 				minLeft = Number.POSITIVE_INFINITY;
 			}
 		}
-		newTR.appendChild($c(RB.village_PPH[3],[['style','text-align:right']]));
-		newTR.appendChild($c(addDorf12Links(linkVSwitch[vn],0)));
-		newTR.appendChild($c(addARLinks(villages_id[vn],0)));
+		if( RB.Setup[63] != 0 ) newTR.appendChild($c(RB.village_PPH[3],[['style','text-align:right']]));
+		if( RB.Setup[62] != 0 ) {
+			newTR.appendChild($c(addDorf12Links(linkVSwitch[vn],0)));
+			newTR.appendChild($c(addARLinks(villages_id[vn],0)));
+		}
 		newTBody.appendChild(newTR);
 	}
 	overviewD.appendChild(newTBody);
@@ -5738,8 +5770,10 @@ function overviewResources () {
 			newTR.appendChild($c(formatTime(getTTime(calcDistance(villages_id[vn],village_aid),MTime[parseInt(RB.Setup[2])]*sM,0,0),0)));
 		else
 			newTR.appendChild($c('&lt;--'));
-		newTR.appendChild($c(addDorf12Links(linkVSwitch[vn],0)));
-		newTR.appendChild($c(addARLinks(villages_id[vn],0)));
+		if( RB.Setup[62] != 0 ) {
+			newTR.appendChild($c(addDorf12Links(linkVSwitch[vn],0)));
+			newTR.appendChild($c(addARLinks(villages_id[vn],0)));
+		}
 		newTBody.appendChild(newTR);
 	}
 	overviewD.appendChild(newTBody);
@@ -5796,8 +5830,10 @@ function overviewTroops () {
 		} else newTR.appendChild($c('&nbsp;'));
 		if( hfl ) newTR.appendChild($em('TD',[$ee('DIV',trImg('unit uhero')),$ee('DIV',RB.village_dorf12[2])]));
 		else newTR.appendChild($c(''));
-		newTR.appendChild($c(addDorf12Links(linkVSwitch[vn],0)));
-		newTR.appendChild($c(addARLinks(villages_id[vn],0)));
+		if( RB.Setup[62] != 0 ) {
+			newTR.appendChild($c(addDorf12Links(linkVSwitch[vn],0)));
+			newTR.appendChild($c(addARLinks(villages_id[vn],0)));
+		}
 		newTBody.appendChild(newTR);
 	}
 	overviewD.appendChild(newTBody);
@@ -6653,7 +6689,7 @@ function showDorf1 () {
 	vlist.tHead.rows[0].appendChild($c(awake));
 	vlist.tHead.rows[0].appendChild($c('',[['colspan','99'],['style','padding:0px']]));
 	aClockTimer = t;
-	showAWake();
+	if( RB.Setup[64] != 0 ) showAWake();
 }
 
 function editAWake () {
@@ -7926,6 +7962,21 @@ function npcForTroops () {
 	var newA = $a(($e('i',[['class','r4']])),[['href',jsVoid],['onclick','setTimeout(function (x) { return exchangeResources.calculateRest() },250)']]);
 	newA.addEventListener('click',redistrNPCcrop, false);
 	TR.appendChild($c(newA));
+	if( parseInt(RB.wantsTrade[0])+parseInt(RB.wantsTrade[1])+parseInt(RB.wantsTrade[2])+parseInt(RB.wantsTrade[3]) > 0 ) {
+		var tradeA = $a('T',[['href',jsVoid],['style','font-weight:700;margin-left:5px;'],['onclick','setTimeout(function (x) { return exchangeResources.calculateRest() },250)']]);
+		tradeA.addEventListener('click', function() {
+			for( var i=0; i<4; i++ ) inps[i].value = parseInt(RB.wantsTrade[i]);
+			tT.parentNode.removeChild(tT);
+			npcForTroops();
+		}, false);
+		TR.appendChild($c(tradeA));
+	}
+	var refreshA = $a('R',[['href',jsVoid],['style','font-weight:700;margin-left:5px;'],['onclick','setTimeout(function (x) { return exchangeResources.calculateRest() },250)']]);
+	refreshA.addEventListener('click', function() {
+		tT.parentNode.removeChild(tT);
+		npcForTroops();
+	}, false);
+	TR.appendChild($c(refreshA));
 	var tT = $ee('TABLE',TR,[['class',allIDs[7]]]);
 	npcT.parentNode.insertBefore(tT, npcT);
 }
