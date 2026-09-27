@@ -2825,7 +2825,7 @@ function $eT( tO, time, ft, att ) { // tO-type of Object, time - relative time, 
 function showRunTime() {
 	var ltime = $g(pageElem[3]);
 	if( ! (ltime) ) {
-		ltime = $ee('DIV',$e('BR'),[['style','position:absolute; left:'+(ltr?10:document.body.clientWidth-100)+'px;top:'+(xyBody[1]+2)+'px;color:black;background-color:cyan;padding:1px 5px;border-radius: 2em;z-index:1000;']]);
+		ltime = $ee('DIV',$e('BR'),[['style','position:absolute; left:'+(ltr?10:document.body.clientWidth-100)+'px;top:'+(xyBody[1]+2)+'px;color:black;background-color:cyan;padding:1px 5px;border-radius: 2em;z-index:300;']]);
 		document.body.appendChild(ltime);
 	}
 	var fts = " RB:<b>" + (Date.now()-RunTime[0]) + "</b>ms";
@@ -2919,7 +2919,7 @@ acss = "table#"+allIDs[0]+" {width:100%; border-collapse:collapse; font-size:8pt
 	"table#"+allIDs[1]+" th {background-color:transparent;border:1px solid silver;height:18px;text-align:left;direction:ltr;white-space:nowrap;}" +
 	"table#"+allIDs[1]+" th a {color:black; font-size:11px;}" +
 	"."+allIDs[2]+" {width: 210px; }" +
-	"div#"+allIDs[3]+" {position:absolute;z-index:10000;border:1px solid silver;text-align:center;background-color:#FFFFE0;}" +
+	"div#"+allIDs[3]+" {position:absolute;z-index:1100;border:1px solid silver;text-align:center;background-color:#FFFFE0;}" +
 	"."+allIDs[4]+" {position:absolute;border:1px solid silver;text-align:center;background-color:white;border-radius:5px;overflow:hidden;}" +
 	"."+allIDs[5]+" {width:100%;height:7px;text-align:center;background-color: #D0D0FF;cursor:move;font-size:6pt;}"+
 	"table#"+allIDs[6]+" {width:auto;border-collapse:collapse; text-align:left; background-color:#F0F0F0; margin:1px;}" +
@@ -2948,7 +2948,7 @@ acss = "table#"+allIDs[0]+" {width:100%; border-collapse:collapse; font-size:8pt
 	"."+allIDs[21]+" {border-collapse:collapse;background-color:transparent;} ."+allIDs[21]+" td {background-color:transparent;}" +
 	"button."+allIDs[15]+" {color:#fff;background-image:linear-gradient(to top,#5c8d0f,#82b433);padding:3px 12px !important;margin:3px 3px !important;border-radius:5px;height:25px;font-size:11px;font-weight:bold;line-height:15px;}" +
 	"."+allIDs[24]+" { visibility:hidden; display:none; position:absolute; top:-100px; left:-100px; }" +
-	"."+allIDs[25]+" { position:absolute; top:0px; left:0px; visibility:visible; display:block; width:100%; height:100%; background-color: black; z-index: 20000; opacity:0.7; padding-top: 20%; }" +
+	"."+allIDs[25]+" { position:absolute; top:0px; left:0px; visibility:visible; display:block; width:100%; height:100%; background-color: black; z-index: 1490; opacity:0.7; padding-top: 20%; }" +
 	"."+allIDs[26]+" { text-align:center; width:66%; background-color:#000015; color:white; font-size:large; border:dashed 2px #FF00AA; padding:9px; } ."+allIDs[26]+" button {color:white;}" +
 	"span."+allIDs[29]+" { visibility:hidden; display:none; }" +
 	"."+allIDs[42]+" { border: 1px solid rgba(0,0,0,.7); text-align: center; border-radius: 50%; width: 21px; height: 21px; line-height: 23px; position: absolute; }" +
@@ -3222,10 +3222,10 @@ function savePosition(objName) {
 var divSN = 100;
 function makeFloat(flObj, ix, iy, sid) {
 	flId = sid !== undefined ? sid : ++divSN;
-	var zindex = 5999;
+	var zindex = 800; // below ad slots (z-index 1500)
 	switch (flId) {
-		case 4:  zindex = 9999; break;
-		case 21:  zindex = 10001; break;
+		case 4:  zindex = 1000; break;
+		case 21:  zindex = 1200; break;
 	}
 	bd = $e('div',[['id',allIDs[14] + flId],['class',allIDs[4]],['style','left:'+ ix +'px;top:'+ iy +'px;z-index:'+ zindex +';margin-right:-10000px;']]);
 	bdr = $ee('div','',[['class',allIDs[5]],['onmousedown',jsNone]]);
@@ -9437,11 +9437,11 @@ function villageBMover () {
 			act.style.backgroundColor='yellow';
 			$at($gt('IMG',act)[0],[['title',gtext("ok")]]);
 			var act_r = $ee('DIV',gtext("reset"),
-				[['style','position:absolute;top:124px;left:'+(ltr?820:380)+'px;z-index:500;width:79px;background-color:red;text-align:center;cursor:pointer;']]);
+				[['style','position:absolute;top:124px;left:'+(ltr?820:380)+'px;z-index:100;width:79px;background-color:red;text-align:center;cursor:pointer;']]);
 			act_r.addEventListener('click',villBMCancel,false);
 			vmap.appendChild(act_r);
 			var act_s = $ee('DIV',gtext("save"),
-				[['style','position:absolute;top:172px;left:'+(ltr?820:380)+'px;z-index:500;width:79px;background-color:lime;text-align:center;cursor:pointer;']]);
+				[['style','position:absolute;top:172px;left:'+(ltr?820:380)+'px;z-index:100;width:79px;background-color:lime;text-align:center;cursor:pointer;']]);
 			act_s.addEventListener('click',villBMSaveChange,false);
 			vmap.appendChild(act_s);
 			inAct = true;
@@ -9482,7 +9482,7 @@ function villageBMover () {
 	var inAct = false;
 	var startFL = true;
 	var act = $ee('DIV',$e('IMG',[['src',img_bmove],['title',gtext("bmove")]]),
-		[['style','position:absolute;top:140px;left:'+(ltr?820:380)+'px;z-index:500;width:79px;height:32px;cursor:pointer;']]);
+		[['style','position:absolute;top:140px;left:'+(ltr?820:380)+'px;z-index:100;width:79px;height:32px;cursor:pointer;']]);
 	act.addEventListener('click',villBMStart,false);
 	vmap.appendChild(act);
 }
@@ -9541,7 +9541,7 @@ function displayWhatIsNew () {
 	if ($g('whatsnew')) {
 		$g("whatsnew").style.visibility = "visible"; return; }
 	else {
-		var box = $e('div',[['id','whatsnew'],['style','width:400px;position:fixed;top:50%;left:50%;transform: translate(-50%,-50%);color:black;background-color:'+rbpBckColor+';padding:5px 5px;border-radius:1em;z-index:999;opacity:0.95;']]);
+		var box = $e('div',[['id','whatsnew'],['style','width:400px;position:fixed;top:50%;left:50%;transform: translate(-50%,-50%);color:black;background-color:'+rbpBckColor+';padding:5px 5px;border-radius:1em;z-index:200;opacity:0.95;']]);
 		var header = $e('div',[['style','height:35px;font-size:130%;font-weight:bold;text-align:center;']]);
 		var content = $e('div',[['style','margin:0px 20px;font-size: 13px;']]);
 		var footer = $e('div',[['style','display:table;margin:15px 20px 15px;width:360px;']]);
