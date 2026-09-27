@@ -3513,6 +3513,10 @@ function marketSend () {
 		} else if ( crtWaste ) tRText += " ( -"+ crtWaste + " )";
 		$at(totalResources, [['style', 'justify-self:start; color:' + mhColor + ';']]);
 		setMerchantsCell(tMText, tRText, mhColor);
+		if( mButt ) {
+			if( totTransport === 0 ) { mButt.setAttribute('disabled',''); mButt.style.cursor = 'default'; }
+			else { mButt.removeAttribute('disabled'); mButt.style.cursor = ''; }
+		}
 	}
 	function getMaxRTr () {
 		var maxRRTr = parseInt(maxRC.value);
@@ -3834,17 +3838,29 @@ function marketSend () {
 	//var ref = $a('(M)',[['href',jsVoid]]);
 	//ref.addEventListener('click', mhRowLinkMPlus, false);
 	//newTR.appendChild($c(ref));
-	var memL = $a('M',[['href',jsVoid],['style','font-size:15px;']]);
+	var sqRect = $gc("buttonFramed plus rectangle",basee)[0].getBoundingClientRect();
+	function mhTextButton( label ) {
+		var btn = $gc("buttonFramed send rectangle withText green",basee)[0].cloneNode(true);
+		btn.classList.remove('send','disabled');
+		btn.setAttribute('type','button');
+		btn.removeAttribute('title');
+		btn.setAttribute('style','width:'+sqRect.width+'px !important;min-width:'+sqRect.width+'px !important;height:'+sqRect.height+'px !important;flex:0 0 auto !important;padding:0 !important;font-size:11px !important;overflow:hidden;white-space:nowrap;display:flex !important;align-items:center !important;justify-content:center !important;');
+		btn.firstElementChild.textContent = label;
+		btn.firstElementChild.setAttribute('style','margin:0;padding:0;line-height:normal;');
+		return btn;
+	}
+	var memL = mhTextButton('M');
 	memL.addEventListener('click', function() { mhRowLinkMem(1); }, false);
-	var memL2 = $a('M/2',[['href',jsVoid],['style','font-size:15px;']]);
+	var memL2 = mhTextButton('M/2');
 	memL2.addEventListener('click', function() { mhRowLinkMem(2); }, false);
-	var memL3 = $a('M/3',[['href',jsVoid],['style','font-size:15px;']]);
+	var memL3 = mhTextButton('M/3');
 	memL3.addEventListener('click', function() { mhRowLinkMem(3); }, false);
-	var refEq = $a('=',[['href',jsVoid],['style','font-size:15px;']]);
+	var refEq = $gc("buttonFramed fillup rectangle",basee)[0].cloneNode(true);
 	refEq.addEventListener('click', mhRowsLinkEq, false);
-	var refP = $a('%',[['href',jsVoid],['style','font-size:15px;']]);
+	refEq.removeAttribute('disabled');
+	var refP = mhTextButton('%');
 	refP.addEventListener('click', mhRowsLinkPP, false);
-	var refCl = $a('C',[['href',jsVoid],['style','font-size:15px;']]);
+	var refCl = mhTextButton('C');
 	refCl.addEventListener('click', mhRowsLinkCl, false);
 	var newAllRes = $e('i', [['class','resources_medium']]);
 	var resSelector = $gc("resourceSelector",basee)[0];
@@ -3853,18 +3869,20 @@ function marketSend () {
 	pButt.removeAttribute('disabled');
 	var mButt = $gc("buttonFramed minus rectangle",basee)[0].cloneNode(true);
 	mButt.addEventListener('click', mhRowsLinkM, false);
-	mButt.removeAttribute('disabled');
 	var newDiv = $e('div',[['style','display:flex;justify-content:space-between;align-items:center;']]);
+	var plusGroup = $e('div',[['style','display:flex;gap:8px;']]);
+	plusGroup.appendChild(refP);
+	plusGroup.appendChild(pButt);
 	newDiv.appendChild(mButt);
 	newDiv.appendChild(memL);
 	newDiv.appendChild(memL2);
 	newDiv.appendChild(memL3);
-	newDiv.appendChild(refEq);
-	newDiv.appendChild(refP);
-	newDiv.appendChild(refCl);
-	newDiv.appendChild(pButt);
+	newDiv.appendChild(plusGroup);
 	resSelector.appendChild(newAllRes);
 	resSelector.appendChild(newDiv);
+	resSelector.appendChild(refEq);
+	resSelector.appendChild(refCl);
+	mhRowUpdate();
 
 	//if( /&r\d=/.test(crtPath) )
 	//	for( i=1; i<5; i++ ) try{ rxI[i].value = crtPath.match(new RegExp('&r'+i+'=(\\d+)'))[1]; } catch(e){};
