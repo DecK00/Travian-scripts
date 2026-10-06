@@ -60,7 +60,7 @@ var lastAlert = RunTime[0];
 var aClockTimer = 0;
 var loadServerTime = 0;
 var langs = ['auto','English (en)','عربي (ar)','Български (bg)','Bosanski (bs)','Deutsch (de)','Ελληνικά (el)','Español (es)','فارسی (fa)','Français (fr)','Hrvatski (hr)','Magyar (hu)','Indonesian (id)','Italiano (it)','Nederlands (nl)','Polski (pl)','Português (pt)','Română (ro)','Русский (ru)','Српски (sr)','Slovensko (sk)','Svenska (sv)','Türkçe (tr)','Українська (ua)','Tiếng Việt (vi)','中文 (zh)'];
-var allCookies = ['vPPH','mf','next','Dorf1','Dorf2','Dorf11','Dorf12','Dorf13','Dorf14','RBSetup','xy','VV','OV','Mem','Dict','DictFL','DictTR','DictRp','DictRpFL','ln','ln2','ln3','src','vHint','tropsI','tropsDic','vList','Att','trFL','AC','AS','bodyH','vBMn'];
+var allCookies = ['vPPH','mf','next','Dorf1','Dorf2','Dorf11','Dorf12','Dorf13','Dorf14','RBSetup','xy','VV','OV','Mem','Dict','DictFL','DictTR','DictRp','DictRpFL','ln','ln2','ln3','src','vHint','tropsI','tropsDic','vList','Att','trFL','AC','AS','bodyH','vBMn','QL'];
 var crtPath = window.location.href;
 var lMap = '';
 var crtName = window.location.hostname;
@@ -95,12 +95,13 @@ var RB = new Object();
 	RB.village_dorf12 = [0];
 	RB.village_dorf13 = [0];
 	RB.village_dorf14 = [0];
-	RB.village_Dorf2 = [0,0,0,0,0,0,0,0,0,0,0,0];
+	RB.village_Dorf2 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 	RB.village_Var = [0,0,0];
 	RB.village_PPH = [0,0,0,0,0,0,0,0,0,0,0,0,0];
 	RB.overview = [-1,'0'];
 	RB.wantsMem = [0,0,0,0,0,0,0,0,0,0];
 	RB.wantsTrade = [0,0,0,0];
+	RB.qlSlots = ['','','','','','','','','','']; // village quick links, 2 rows x 5 slots ('-' = empty, '' = not configured)
 //						1		2				3				4			5					6				7			8		9			10		11		12	  13, 14	15		16				17				18				19				20					21			22		23		24				25				26			27		28			29			30		31			32
 	RB.dictionary = [0,'Ally','Merchants','Tournament Square','Duration','resource balance','Rally Point','Marketplace','Barracks','Stable','Workshop','Buy','Attacks',0,'at ','Map','Reinforcement','Attack: Normal','Attack: Raid','Culture points','Crop consumption','capacity','Farm List','','Great Barracks','Great Stable','Hospital','Asclepeion','Harbor','Town Hall','Smithy','Overview','Send Troops'];
 	RB.dictFL = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -231,6 +232,10 @@ DICT = {
 		analyzer : "World analyzer",
 		qlicons : "Show Quick Link icons",
 		bigicon : "Show the old Quick Link icons window",
+		qltitle : "Available quick links",
+		qlhint : "To change quick links, drag up to 10 buttons into the slots of your active village",
+		qlused : "Already in use",
+		qlnames : [["Smithy","Management"],["Rally point","Overview"],["Rally point","Send troops"],["Rally point","Farm list"],["Marketplace","Send resources"],["Marketplace","Trade routes"],["Marketplace","Buy"],["Barracks","Management"],["Great barracks","Management"],["Stable","Management"],["Great stable","Management"],["Workshop","Management"],["Town hall","Celebration"],["Hero's mansion","Management"],["Hospital","Management"],["Residence / Palace","Train"],["Residence / Palace","Culture points"],["Alliance","Overview"],["Alliance","Reports"]],
 		addvtable : "Show village list window",
 		addvtableo : ['off','on','stick'],
 		opennote : "Automatically open Notes window",
@@ -364,6 +369,10 @@ DICT = {
 		analyzer : "Анализатор мира",
 		qlicons : "Показывать иконки быстрых ссылок",
 		bigicon : "Показывать Пункт сбора икон",
+		qltitle : "Доступные быстрые ссылки",
+		qlhint : "Чтобы изменить быстрые ссылки, перетяните до 10 кнопок в слоты вашей активной деревни",
+		qlused : "Уже используется",
+		qlnames : [["Кузница","Управление"],["Пункт сбора","Обзор"],["Пункт сбора","Отправка войск"],["Пункт сбора","Избранные цели"],["Рынок","Отправить"],["Рынок","Торговые пути"],["Рынок","Покупка"],["Казарма","Управление"],["Большая казарма","Управление"],["Конюшня","Управление"],["Большая конюшня","Управление"],["Мастерская","Управление"],["Ратуша","Праздник"],["Таверна","Управление"],["Госпиталь","Управление"],["Резиденция / Дворец","Обучить"],["Резиденция / Дворец","Единицы культуры"],["Альянс","Обзор"],["Альянс","Отчёты"]],
 		addvtable : "Показывать дополнительную таблицу деревень",
 		addvtableo : ['нет','да','приклеить'],
 		opennote : "Автоматически открывать заметки",
@@ -4554,6 +4563,7 @@ function loadAllCookie () {
 	loadCookie ( 'OV', 'overview' );
 	loadCookie ( 'Mem', 'wantsMem' );
 	loadCookie ( 'Trade', 'wantsTrade' );
+	loadCookie ( 'QL', 'qlSlots' );
 	loadCookie ( 'DictTR', 'dictTR' );
 	loadCookie ( 'AS', 'serversAN' );
 
@@ -4815,6 +4825,45 @@ function sendResTropAdd ( aLink, aType ) {
 	var vId = getVid(aLink.getAttribute('href'));
 	if( vId == village_aid || vId == 0 ) return;
 	insertAfter(addARLinks(vId, aType),aLink);
+}
+
+// clickable village coordinates in the village list on the market and rally point send pages, like with Travian Plus
+function villageShortcuts () {
+	if( $gc('shortcutsEnabled').length > 0 || document.body.classList.contains('rbVillageShortcuts') ) return;
+	var le = 'body.rbVillageShortcuts .sidebar #sidebarBoxVillageList .content .villageList .listEntry';
+	RB_addStyle(
+		le+' .coordinatesGrid:before,'+le+' .iconAndNameWrapper:before {content:"";position:absolute;inset:0;z-index:-1;background-color:transparent;transition-duration:250ms;}' +
+		le+' .coordinatesGrid {font-weight:700;position:absolute;inset-block:0;inset-inline:auto 0;z-index:2;}' +
+		le+':not(.active) .coordinatesGrid:hover:before,'+le+':not(.active) .iconAndNameWrapper:hover:before {background-color:#fff9eb;}' +
+		le+':not(.active) .coordinatesGrid {color:#5a9a0a;}' +
+		le+':not(.active) .coordinatesGrid:hover {color:#99c01a;cursor:pointer;}' +
+		le+':not(.active):hover {background-color:transparent;}');
+	document.body.classList.add('rbVillageShortcuts');
+	document.addEventListener('click', function(e) {
+		var coords = e.target.closest('#sidebarBoxVillageList .listEntry:not(.active) .coordinatesGrid');
+		if( ! coords ) return;
+		var xy = id2xy( getVidFromCoords(coords.innerHTML) );
+		var form = $gc('sendResourcesForm')[0];
+		if( form ) {
+			var inpX = form.querySelector('input[name="x"]');
+			var inpY = form.querySelector('input[name="y"]');
+			if( ! inpX || ! inpY ) return;
+			e.preventDefault(); e.stopPropagation();
+			var inpName = form.querySelector('.search input');
+			if( inpName && inpName.value ) { inpName.focus(); inpName.select(); document.execCommand('delete'); }
+			updateInput(inpX, String(xy[0]));
+			updateInput(inpY, String(xy[1]));
+			inpY.blur(); // a focused field opens the village autocomplete list
+		} else {
+			var inpX = $g('xCoordInput');
+			var inpY = $g('yCoordInput');
+			if( ! inpX || ! inpY ) return;
+			e.preventDefault(); e.stopPropagation();
+			if( $g('enterVillageName') ) $g('enterVillageName').value = '';
+			inpX.value = xy[0];
+			inpY.value = xy[1];
+		}
+	}, true);
 }
 
 // begin Quick actions to my other villages
@@ -5365,13 +5414,14 @@ function sendResourses( myVid ) {
 	return false;
 }
 
-// 0-market, 1-barracks, 2-stable, 3-workshop, 4-Tournament Square, 5-Great Barracks, 6-Great Stable, 7-Hospital, 8-Asclepeion, 9-Harbor, 10-Town Hall, 11-Smithy
+// 0-market, 1-barracks, 2-stable, 3-workshop, 4-Tournament Square, 5-Great Barracks, 6-Great Stable, 7-Hospital, 8-Asclepeion, 9-Harbor, 10-Town Hall, 11-Smithy,
+// 12-Hero's Mansion, 13-Residence, 14-Palace, 15-Command Center, 16-dorf2 already parsed flag
 function parseDorf2 () {
 	var base = $g('villageContent');
 	if( !(base) ) return;
 	var fl = false;
-	var buildsID = ['g17','g19','g20','g21','g14','g29','g30','g46','g48','g49','g24','g13'];
-	var buildsNum = [0,0,0,0,0,0,0,0,0,0,0,0];
+	var buildsID = ['g17','g19','g20','g21','g14','g29','g30','g46','g48','g49','g24','g13','g37','g25','g26','g44'];
+	var buildsNum = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
 	var allIMG = $gt('IMG',base);
 	for( var t=0; t<allIMG.length; t++ ) {
@@ -5389,6 +5439,7 @@ function parseDorf2 () {
 			fl = true;
 		}
 	}
+	if( RB.village_Dorf2[16] != 1 ) { RB.village_Dorf2[16] = 1; fl = true; }
 	if( buildsNum[4] > 0 ) { // search&save Tournament Square
 		var tur = $xf('.//img[contains(@class,"g14")]','f',base).previousElementSibling.firstChild.textContent;
 		if( tur != RB.village_Var[1] ) {
@@ -6813,8 +6864,7 @@ function addSpeedAndRTSend ( iBl, href ) {
 	if (href) addRefIGM(iBl);
 }
 
-function bigQuickLinks () {
-	var img_bigIcon = [ // 0-RP, 1-barrack, 2-stable, 3-workshop, 4-market, 5-market_in, 6-ally, 7-ally_attack, 8-GreatBarracks, 9-GreatStable, 10-Hospital, 11-TownHall, 12-RP SendTroops, 13-FarmList, 14-Smithy
+var img_bigIcon = [ // 0-RP, 1-barrack, 2-stable, 3-workshop, 4-market, 5-market_in, 6-ally, 7-ally_attack, 8-GreatBarracks, 9-GreatStable, 10-Hospital, 11-TownHall, 12-RP SendTroops, 13-FarmList, 14-Smithy, 15-HerosMansion, 16-ExpansionTrain, 17-TradeRoutes, 18-CulturePoints
 		'<svg class="RallyPointOverview"><svg viewBox="0 0 199 250" class="outline"><path d="M149.6 85.8h20.7v150.5l-70.6-39.6-71.1 39.6V85.8h21.2v115.5l50.1-31.4 49.7 31.4V85.8Zm-13.1.7h-74v88.9L99.6 151l36.8 24.4V86.5Zm50.3-35.2c-3.5 0-6.6 1.4-8.8 3.7H21.1C14 47.2-.4 52.8 0 63.6c-.4 10.8 14 16.5 21.1 8.6H178c17.9 15.1 32.2-18.6 8.8-20.9ZM87.4 219.8V250h24v-30.2c-14-3.7-10.1-3.7-24 0ZM96.6 39c7.6 2.7 19.5-5 22-8.5 1.6-2 1.7-4.8.2-6.7L100.6-.1h-.2L81.9 23.8c-4 7.5 5.6 11.9 14.7 15.2Z"></path></svg><svg viewBox="0 0 199 250" class="icon"><path d="M149.6 85.8h20.7v150.5l-70.6-39.6-71.1 39.6V85.8h21.2v115.5l50.1-31.4 49.7 31.4V85.8Zm-13.1.7h-74v88.9L99.6 151l36.8 24.4V86.5Zm50.3-35.2c-3.5 0-6.6 1.4-8.8 3.7H21.1C14 47.2-.4 52.8 0 63.6c-.4 10.8 14 16.5 21.1 8.6H178c17.9 15.1 32.2-18.6 8.8-20.9ZM87.4 219.8V250h24v-30.2c-14-3.7-10.1-3.7-24 0ZM96.6 39c7.6 2.7 19.5-5 22-8.5 1.6-2 1.7-4.8.2-6.7L100.6-.1h-.2L81.9 23.8c-4 7.5 5.6 11.9 14.7 15.2Z"></path></svg></svg>',
 		'<svg class="BarracksManagement"><svg viewBox="0 0 184.6 200" class="outline"><path d="m138.6 172.6 3.8 3.2s-12.3 8.4-20.5 7c-8.1-1.5-16.2-23-16.2-23.3-.5-7.8-7-13.8-14.8-13.8s-14.8 6.6-14.8 14.8 1.1 6.5 3 9c2.6 3.5 6.7 5.7 11.3 5.9-34.5 25.8-75.6 24.7-75.6 24.7l28.4-65.6 8.8 5.2 30-25.1-18.8-13.9s-14.8 2.7-28.2 12.4c-2.1 4.8-9.6 27.4-9.6 27.4L12 146.9l11-40.6 1.6-5.9c7-20.9 26.7-36.1 50-36.1s52.7 23.6 52.7 52.7-.8 11.3-2.6 16.4c-1.6 11.4-1.5 29.8 13.9 39.2Zm18-63.1 27.3-3.4c-2-19.5-8.2-37.8-18-53.6l-36.8 14.9 28.3-27C146.1 26.5 131.8 15.3 115 8.3L94.5 42.5l8-38.6c-.6-.2-1.3-.4-1.9-.5C87.5 0 74.2-.8 61.4.8l4.2 30.8L51 2.5c-16.9-.4-33.3 4.2-51 9l39.3 45.1c10.4-1.4 35-10.3 45.6-7.6 46.3 12.1 64.7 54.6 54.1 105.1 13.7 11.7 0 0 31.2 31.5 8.8-26.3 4.8-11.8 10-31.5 2.8-11 4.3-22 4.4-32.8l-28-11.7Z"></path></svg><svg viewBox="0 0 184.6 200" class="icon"><path d="m138.6 172.6 3.8 3.2s-12.3 8.4-20.5 7c-8.1-1.5-16.2-23-16.2-23.3-.5-7.8-7-13.8-14.8-13.8s-14.8 6.6-14.8 14.8 1.1 6.5 3 9c2.6 3.5 6.7 5.7 11.3 5.9-34.5 25.8-75.6 24.7-75.6 24.7l28.4-65.6 8.8 5.2 30-25.1-18.8-13.9s-14.8 2.7-28.2 12.4c-2.1 4.8-9.6 27.4-9.6 27.4L12 146.9l11-40.6 1.6-5.9c7-20.9 26.7-36.1 50-36.1s52.7 23.6 52.7 52.7-.8 11.3-2.6 16.4c-1.6 11.4-1.5 29.8 13.9 39.2Zm18-63.1 27.3-3.4c-2-19.5-8.2-37.8-18-53.6l-36.8 14.9 28.3-27C146.1 26.5 131.8 15.3 115 8.3L94.5 42.5l8-38.6c-.6-.2-1.3-.4-1.9-.5C87.5 0 74.2-.8 61.4.8l4.2 30.8L51 2.5c-16.9-.4-33.3 4.2-51 9l39.3 45.1c10.4-1.4 35-10.3 45.6-7.6 46.3 12.1 64.7 54.6 54.1 105.1 13.7 11.7 0 0 31.2 31.5 8.8-26.3 4.8-11.8 10-31.5 2.8-11 4.3-22 4.4-32.8l-28-11.7Z"></path></svg></svg>',
 		'<svg class="StableManagement"><svg viewBox="0 0 237.1 250" class="outline"><path d="M218.3 128.8c7.5 2.5 13.7 6.2 18.7 10-12.5-19.8-38.6-60.7-65-68.7 3.7 0 17.5-1.2 20 0-11.2-6.2-13.7-11.2-70-31.2q-8.7-2.5-18.7-6.2C102.2 28 86.5-2.1 69.7.1c1.6 5.7 3 37.8 3.7 41.2 0 0-1.2 0-2.5 1.2-4.6-.8-22.1-12.5-26.2-15 0 0 1.2 23.7 10 31.2-5 5-8.7 10-11.2 8.7-17.6 6.4-11.1 19.4-11.2 32.5-8.9 17.5-13.7 40.2-25 56.2-8.2 2.3-10 13.8-2.5 18.7 2.7 14.1 15 22.5 28.7 21.2 11.2-1.2 18.7-10 21.2-21.2 40.4-10.2 83.1-45.4 35-73.7 79.9 8.7-5 136.2-6.2 141.2 17.5 10 28.7 8.7 63.7 3.7 18.7-7.5 45-30 60-37.5 10.9-24.1 21.2-53.4 11.2-79.9Zm-158.6-30c-2.5 1.2-5 2.5-6.2 2.5-6.2 0-10 3.7-10-1.2s2.5-17.5 8.7-17.5c14.4-2.2 18.5 6.7 7.5 16.2Zm139.9 102.4c-6.2-94.9-81.2-138.7-86.2-141.2 6.2 1.2 103.7 28.7 86.2 141.2Z"></path></svg><svg viewBox="0 0 237.1 250" class="icon"><path d="M218.3 128.8c7.5 2.5 13.7 6.2 18.7 10-12.5-19.8-38.6-60.7-65-68.7 3.7 0 17.5-1.2 20 0-11.2-6.2-13.7-11.2-70-31.2q-8.7-2.5-18.7-6.2C102.2 28 86.5-2.1 69.7.1c1.6 5.7 3 37.8 3.7 41.2 0 0-1.2 0-2.5 1.2-4.6-.8-22.1-12.5-26.2-15 0 0 1.2 23.7 10 31.2-5 5-8.7 10-11.2 8.7-17.6 6.4-11.1 19.4-11.2 32.5-8.9 17.5-13.7 40.2-25 56.2-8.2 2.3-10 13.8-2.5 18.7 2.7 14.1 15 22.5 28.7 21.2 11.2-1.2 18.7-10 21.2-21.2 40.4-10.2 83.1-45.4 35-73.7 79.9 8.7-5 136.2-6.2 141.2 17.5 10 28.7 8.7 63.7 3.7 18.7-7.5 45-30 60-37.5 10.9-24.1 21.2-53.4 11.2-79.9Zm-158.6-30c-2.5 1.2-5 2.5-6.2 2.5-6.2 0-10 3.7-10-1.2s2.5-17.5 8.7-17.5c14.4-2.2 18.5 6.7 7.5 16.2Zm139.9 102.4c-6.2-94.9-81.2-138.7-86.2-141.2 6.2 1.2 103.7 28.7 86.2 141.2Z"></path></svg></svg>',
@@ -6829,8 +6879,290 @@ function bigQuickLinks () {
 		'<svg class="TownHallCelebration"><svg viewBox="0 0 195.1 250" class="outline"><path d="M119.9 32.2c0 25.2-3.3 60.9-3.3 60.9s-5.4 4.3-6 0-3.3-27.9-21.7-32.5q-.1 0-.2-.1c0 4 .1 91.5 0 92.5h-.2c-8 42.7-87.1 39.7-88.5-4.8-.3-30.4 44.6-44.9 70.5-28.7V0h6.3c5.9 15.8 21.3 27.7 43.1 32.2ZM195.1 98.9c0 25.2-3.3 60.9-3.3 60.9s-5.4 4.3-6 0-3.3-27.9-21.7-32.5q-.1 0-.2-.1c0 4 .1 91.5 0 92.5h-.2c-8 42.7-87.1 39.7-88.5-4.7-.3-30.4 44.6-44.9 70.5-28.7V66.9h6.3c5.9 15.9 21.4 27.7 43.1 32.1Z"></path></svg><svg viewBox="0 0 195.1 250" class="icon"><path d="M119.9 32.2c0 25.2-3.3 60.9-3.3 60.9s-5.4 4.3-6 0-3.3-27.9-21.7-32.5q-.1 0-.2-.1c0 4 .1 91.5 0 92.5h-.2c-8 42.7-87.1 39.7-88.5-4.8-.3-30.4 44.6-44.9 70.5-28.7V0h6.3c5.9 15.8 21.3 27.7 43.1 32.2ZM195.1 98.9c0 25.2-3.3 60.9-3.3 60.9s-5.4 4.3-6 0-3.3-27.9-21.7-32.5q-.1 0-.2-.1c0 4 .1 91.5 0 92.5h-.2c-8 42.7-87.1 39.7-88.5-4.7-.3-30.4 44.6-44.9 70.5-28.7V66.9h6.3c5.9 15.9 21.4 27.7 43.1 32.1Z"></path></svg></svg>',
 		'<svg class="RallyPointSendTroops"><svg viewBox="0 0 250 203.3" class="outline"><path d="m211.1 96.1-72.3 80.6 19.3 10.2 65.2-72.7-12.2-18.1zM245.5 174c-3.6-3.2-8.6-4-13.5-2.5 3.6-5.1-2.9-11.7-8.1-11.3 1.1-5.3-5.4-10.7-10.3-10.5 1-4.1-2.8-8.1-6.3-10.2l-23.6 26.3c-.7 5.8 7.5 10.7 12.8 10.1-.7 5.3 6.5 9.3 11.2 8.7-1 5 6.3 8.7 10.5 7.4 6.5 27.1 44.8-.2 27.4-17.9ZM100.5 148.9 219.4 42.4C228.5-9 236.1-.7 184.1 3L64.9 110l35.6 38.9ZM30.5 42.2l45.8 37.4 36.6-34.3L65.8 3C12.7-.5 21.3-10.1 30.5 42.2ZM26.6 114.2l65.2 72.7 19.3-10.2-72.3-80.6-12.2 18.1zM42.6 139.4c-3.5 2.1-7.3 6.1-6.3 10.2-5-.1-11.4 5.3-10.2 10.5-5.2-.4-11.7 6.3-8.1 11.4C2.6 166.4-6.2 185 5 196.7c8.7 10.1 25 8.1 26.6-4.9 4.2 1.6 11.7-2.2 10.7-7.3 4.7.6 12-3.4 11.2-8.7 5.2.6 13.4-4.3 12.7-10.1l-23.6-26.3ZM185.2 112.2l-10.3-11.3-37.3 35.1 14.8 12.9 32.8-36.7z"></path></svg><svg viewBox="0 0 250 203.3" class="icon"><path d="m211.1 96.1-72.3 80.6 19.3 10.2 65.2-72.7-12.2-18.1zM245.5 174c-3.6-3.2-8.6-4-13.5-2.5 3.6-5.1-2.9-11.7-8.1-11.3 1.1-5.3-5.4-10.7-10.3-10.5 1-4.1-2.8-8.1-6.3-10.2l-23.6 26.3c-.7 5.8 7.5 10.7 12.8 10.1-.7 5.3 6.5 9.3 11.2 8.7-1 5 6.3 8.7 10.5 7.4 6.5 27.1 44.8-.2 27.4-17.9ZM100.5 148.9 219.4 42.4C228.5-9 236.1-.7 184.1 3L64.9 110l35.6 38.9ZM30.5 42.2l45.8 37.4 36.6-34.3L65.8 3C12.7-.5 21.3-10.1 30.5 42.2ZM26.6 114.2l65.2 72.7 19.3-10.2-72.3-80.6-12.2 18.1zM42.6 139.4c-3.5 2.1-7.3 6.1-6.3 10.2-5-.1-11.4 5.3-10.2 10.5-5.2-.4-11.7 6.3-8.1 11.4C2.6 166.4-6.2 185 5 196.7c8.7 10.1 25 8.1 26.6-4.9 4.2 1.6 11.7-2.2 10.7-7.3 4.7.6 12-3.4 11.2-8.7 5.2.6 13.4-4.3 12.7-10.1l-23.6-26.3ZM185.2 112.2l-10.3-11.3-37.3 35.1 14.8 12.9 32.8-36.7z"></path></svg></svg>',
 		'<svg class="RallyPointFarmList"><svg viewBox="0 0 250 249.3" class="outline"><path d="m102 36.9.6 18.7 46.3 4.8-15.4 56.4-30.4 1L84.7 225h139.1s-63.4-97.7 0-188.1H101.9Zm137.3 0s-19.5 21.2-23.9 49.8h23.9s24-19.5 0-49.8Zm-3.2 185.8c-5.1-7.1-18.7-25.5-20.2-45.8 1.1.3 24.4-.8 24.4.9 4 3.8 18.4 20.5 2.1 44.8-1.5 2.3-4.7 2.3-6.3.2ZM78.4 15.3v52.9H42.3V15.3c.3-.3 17.8-15 18-15.3.2.3 17.8 15 18 15.3Zm42.2 54.8-9.3 29.1-27.8-3-19.1 13.2h-8.1L37.2 96.3l-27.8 3L0 70.1l28.8-2s6.6 4.2 9.6 3.9c2.8-.3 19.3 0 22.1 0 3.3 0 19.1-.3 21.8 0 2.9.3 9.6-3.9 9.6-3.9l28.6 2Zm-36.4 32.5L57 248.5v.9L36.6 102.7l17.3 11.7h12.9l17.3-11.7Z"></path></svg><svg viewBox="0 0 250 249.3" class="icon"><path d="m102 36.9.6 18.7 46.3 4.8-15.4 56.4-30.4 1L84.7 225h139.1s-63.4-97.7 0-188.1H101.9Zm137.3 0s-19.5 21.2-23.9 49.8h23.9s24-19.5 0-49.8Zm-3.2 185.8c-5.1-7.1-18.7-25.5-20.2-45.8 1.1.3 24.4-.8 24.4.9 4 3.8 18.4 20.5 2.1 44.8-1.5 2.3-4.7 2.3-6.3.2ZM78.4 15.3v52.9H42.3V15.3c.3-.3 17.8-15 18-15.3.2.3 17.8 15 18 15.3Zm42.2 54.8-9.3 29.1-27.8-3-19.1 13.2h-8.1L37.2 96.3l-27.8 3L0 70.1l28.8-2s6.6 4.2 9.6 3.9c2.8-.3 19.3 0 22.1 0 3.3 0 19.1-.3 21.8 0 2.9.3 9.6-3.9 9.6-3.9l28.6 2Zm-36.4 32.5L57 248.5v.9L36.6 102.7l17.3 11.7h12.9l17.3-11.7Z"></path></svg></svg>',
-		'<svg class="BlacksmithManagement"><svg viewBox="0 0 250 239.3" class="outline"><path d="m109.5 94.1 34.9 7.1c7.2 1.5 14.3-3.2 15.7-10.4l13.8-67.6c1.5-7.2-3.2-14.3-10.4-15.7L128.6.3c-7.2-1.5-14.3 3.2-15.7 10.4L99.1 78.3c-1.5 7.2 3.2 14.4 10.4 15.7ZM7.5 41.4l80.6 16.4c11.6 2.5 10.8-16.2 13-22.9.9-4.5-2-8.7-6.3-9.6L14.2 8.9c-4.5-.9-8.7 2-9.6 6.3-.6 7.1-8.6 23.9 3 26.1ZM62.8 111.9c-14.4-.2-52.8-.7-57.8 0-6.2.9-5.9 7.5-2.5 12.3 25.1 32.8 61.6 47.3 65.6 32.3v-39c0-3.1-2.4-5.6-5.2-5.6ZM246.5 108.3H77.1c-2.1 0-3.9 1.7-3.9 3.7v64c.8 9.1 18.4-1.2 19.6 7.4l1.1 13.1c.2 2 1.9 3.6 3.9 3.6l68.6.2c5.9-.6 5.2-12 8-17.4.5-1.4 1.7-2.4 3.2-2.6 13-1.8 16.3-21.7 19-29.3 2.8-8 4.5-4 24.2-8.4 10.4 0 39.1-32.4 25.7-34.2ZM175.4 213.5c-1-1.2-2.5-1.8-4.1-1.8H92.4c-1.7 0-3.3.8-4.3 2.2l-12.9 16.3c-2.9 3.7-.3 9 4.4 9h107c4.9 0 7.4-5.8 4.1-9.4l-15.3-16.3Z"></path></svg><svg viewBox="0 0 250 239.3" class="icon"><path d="m109.5 94.1 34.9 7.1c7.2 1.5 14.3-3.2 15.7-10.4l13.8-67.6c1.5-7.2-3.2-14.3-10.4-15.7L128.6.3c-7.2-1.5-14.3 3.2-15.7 10.4L99.1 78.3c-1.5 7.2 3.2 14.4 10.4 15.7ZM7.5 41.4l80.6 16.4c11.6 2.5 10.8-16.2 13-22.9.9-4.5-2-8.7-6.3-9.6L14.2 8.9c-4.5-.9-8.7 2-9.6 6.3-.6 7.1-8.6 23.9 3 26.1ZM62.8 111.9c-14.4-.2-52.8-.7-57.8 0-6.2.9-5.9 7.5-2.5 12.3 25.1 32.8 61.6 47.3 65.6 32.3v-39c0-3.1-2.4-5.6-5.2-5.6ZM246.5 108.3H77.1c-2.1 0-3.9 1.7-3.9 3.7v64c.8 9.1 18.4-1.2 19.6 7.4l1.1 13.1c.2 2 1.9 3.6 3.9 3.6l68.6.2c5.9-.6 5.2-12 8-17.4.5-1.4 1.7-2.4 3.2-2.6 13-1.8 16.3-21.7 19-29.3 2.8-8 4.5-4 24.2-8.4 10.4 0 39.1-32.4 25.7-34.2ZM175.4 213.5c-1-1.2-2.5-1.8-4.1-1.8H92.4c-1.7 0-3.3.8-4.3 2.2l-12.9 16.3c-2.9 3.7-.3 9 4.4 9h107c4.9 0 7.4-5.8 4.1-9.4l-15.3-16.3Z"></path></svg></svg>'
+		'<svg class="BlacksmithManagement"><svg viewBox="0 0 250 239.3" class="outline"><path d="m109.5 94.1 34.9 7.1c7.2 1.5 14.3-3.2 15.7-10.4l13.8-67.6c1.5-7.2-3.2-14.3-10.4-15.7L128.6.3c-7.2-1.5-14.3 3.2-15.7 10.4L99.1 78.3c-1.5 7.2 3.2 14.4 10.4 15.7ZM7.5 41.4l80.6 16.4c11.6 2.5 10.8-16.2 13-22.9.9-4.5-2-8.7-6.3-9.6L14.2 8.9c-4.5-.9-8.7 2-9.6 6.3-.6 7.1-8.6 23.9 3 26.1ZM62.8 111.9c-14.4-.2-52.8-.7-57.8 0-6.2.9-5.9 7.5-2.5 12.3 25.1 32.8 61.6 47.3 65.6 32.3v-39c0-3.1-2.4-5.6-5.2-5.6ZM246.5 108.3H77.1c-2.1 0-3.9 1.7-3.9 3.7v64c.8 9.1 18.4-1.2 19.6 7.4l1.1 13.1c.2 2 1.9 3.6 3.9 3.6l68.6.2c5.9-.6 5.2-12 8-17.4.5-1.4 1.7-2.4 3.2-2.6 13-1.8 16.3-21.7 19-29.3 2.8-8 4.5-4 24.2-8.4 10.4 0 39.1-32.4 25.7-34.2ZM175.4 213.5c-1-1.2-2.5-1.8-4.1-1.8H92.4c-1.7 0-3.3.8-4.3 2.2l-12.9 16.3c-2.9 3.7-.3 9 4.4 9h107c4.9 0 7.4-5.8 4.1-9.4l-15.3-16.3Z"></path></svg><svg viewBox="0 0 250 239.3" class="icon"><path d="m109.5 94.1 34.9 7.1c7.2 1.5 14.3-3.2 15.7-10.4l13.8-67.6c1.5-7.2-3.2-14.3-10.4-15.7L128.6.3c-7.2-1.5-14.3 3.2-15.7 10.4L99.1 78.3c-1.5 7.2 3.2 14.4 10.4 15.7ZM7.5 41.4l80.6 16.4c11.6 2.5 10.8-16.2 13-22.9.9-4.5-2-8.7-6.3-9.6L14.2 8.9c-4.5-.9-8.7 2-9.6 6.3-.6 7.1-8.6 23.9 3 26.1ZM62.8 111.9c-14.4-.2-52.8-.7-57.8 0-6.2.9-5.9 7.5-2.5 12.3 25.1 32.8 61.6 47.3 65.6 32.3v-39c0-3.1-2.4-5.6-5.2-5.6ZM246.5 108.3H77.1c-2.1 0-3.9 1.7-3.9 3.7v64c.8 9.1 18.4-1.2 19.6 7.4l1.1 13.1c.2 2 1.9 3.6 3.9 3.6l68.6.2c5.9-.6 5.2-12 8-17.4.5-1.4 1.7-2.4 3.2-2.6 13-1.8 16.3-21.7 19-29.3 2.8-8 4.5-4 24.2-8.4 10.4 0 39.1-32.4 25.7-34.2ZM175.4 213.5c-1-1.2-2.5-1.8-4.1-1.8H92.4c-1.7 0-3.3.8-4.3 2.2l-12.9 16.3c-2.9 3.7-.3 9 4.4 9h107c4.9 0 7.4-5.8 4.1-9.4l-15.3-16.3Z"></path></svg></svg>',
+		'<svg class="HerosMansionManagement"><svg viewBox="0 0 233.6 250" class="outline"><path d="M44.9 123.2c-2 12.1-3.5 23.2 16.8 23.2 2.7 5.9 4.8 7.2 10.4 6.8 2.5-29 27.8-32.2 27.8 2.6 11.1-3.9 10.5-12.5 13-16 9.3-3.5 22.7 1.2 20-40.7 7.3-10.3 6-30.9-6.4-35.2 0-8.1-9-23.6-17.6-21.8 2.1-8.1.8-28.7-17.2-31.3-5.2-7.3-23.6-24.4-30.5 9.9-8.1 1.2-20.1 8.6-14.5 24.4-11.6 7.3-23.2 18.4-11.1 42-8.1 9.9-15.4 26.2 9.4 36.1h-.1Zm32.9 75.4c7.9 12.5 16.9-1.6 16.9-1.6-3.3-85.8-20.1-67.9-16.9 1.6Zm152.6 16L208 228.1l-36.9-8.1-8.6-16.4h-11.1L127 179.2s1.2-15.4 0-15.4h-19.3s-.4 43-3.9 45.4c-3.5 2.6-33.4 3-33.4 3s-4.3-1.2-4.3-5.4.1-27.5.1-27.5l-9 4.3s0 10.7-3.9 13.3-43 15.4-45.5 18S.1 234.2.1 234.2l13.7 9s53.2-9 59.5-9l4.5 6.4 31.1 9.4c26.8-10.1 56.1-14 86.2-9.5l38.6-21-3.4-4.9h.2ZM147.9 188l14.5 2.6-1.2-18.9 11.1-19.7-8.1-10.3c-12-1.5-21.7 8.3-26.8 15.9l-2.5 18.5 12.9 12.1Zm29.7 22.5 28.7 6.4 23.2-13.3-3-42.9-16.8-29.7-12.9-3.4-14.1 11.5-4.3 16.4-11.1 15.9c-3.7 17.1 10.2 39 10.2 39Z"></path></svg><svg viewBox="0 0 233.6 250" class="icon"><path d="M44.9 123.2c-2 12.1-3.5 23.2 16.8 23.2 2.7 5.9 4.8 7.2 10.4 6.8 2.5-29 27.8-32.2 27.8 2.6 11.1-3.9 10.5-12.5 13-16 9.3-3.5 22.7 1.2 20-40.7 7.3-10.3 6-30.9-6.4-35.2 0-8.1-9-23.6-17.6-21.8 2.1-8.1.8-28.7-17.2-31.3-5.2-7.3-23.6-24.4-30.5 9.9-8.1 1.2-20.1 8.6-14.5 24.4-11.6 7.3-23.2 18.4-11.1 42-8.1 9.9-15.4 26.2 9.4 36.1h-.1Zm32.9 75.4c7.9 12.5 16.9-1.6 16.9-1.6-3.3-85.8-20.1-67.9-16.9 1.6Zm152.6 16L208 228.1l-36.9-8.1-8.6-16.4h-11.1L127 179.2s1.2-15.4 0-15.4h-19.3s-.4 43-3.9 45.4c-3.5 2.6-33.4 3-33.4 3s-4.3-1.2-4.3-5.4.1-27.5.1-27.5l-9 4.3s0 10.7-3.9 13.3-43 15.4-45.5 18S.1 234.2.1 234.2l13.7 9s53.2-9 59.5-9l4.5 6.4 31.1 9.4c26.8-10.1 56.1-14 86.2-9.5l38.6-21-3.4-4.9h.2ZM147.9 188l14.5 2.6-1.2-18.9 11.1-19.7-8.1-10.3c-12-1.5-21.7 8.3-26.8 15.9l-2.5 18.5 12.9 12.1Zm29.7 22.5 28.7 6.4 23.2-13.3-3-42.9-16.8-29.7-12.9-3.4-14.1 11.5-4.3 16.4-11.1 15.9c-3.7 17.1 10.2 39 10.2 39Z"></path></svg></svg>',
+		'<svg class="ExpansionTrain"><svg viewBox="0 0 212.4 250.6" class="outline"><path d="M.2 198.2 101.1 105 84 161.7.2 246.9v-48.7ZM168.1 46l34.1-29.1s15.9-12.2 7.7 6.7c-15.1 19.4-41.8 48-41.8 48l-3.7-3.7s6.7-19.5 3.7-21.9Zm-30.5 14s-1.2-18.9 17.7-25.5c3.7 18.9 4.3 30.4-3.1 42 23.6 30.8 109.4 159.9 3.7 172.9C45.5 259.9 104.2 139.7 128 86.9c0 0 7.8 5.5 14.5-2.4-11.6-1.8-37.7-5.5-41.4-36.5 12.3-1.3 20.4-1.5 36.6 12.1Z"></path></svg><svg viewBox="0 0 212.4 250.6" class="icon"><path d="M.2 198.2 101.1 105 84 161.7.2 246.9v-48.7ZM168.1 46l34.1-29.1s15.9-12.2 7.7 6.7c-15.1 19.4-41.8 48-41.8 48l-3.7-3.7s6.7-19.5 3.7-21.9Zm-30.5 14s-1.2-18.9 17.7-25.5c3.7 18.9 4.3 30.4-3.1 42 23.6 30.8 109.4 159.9 3.7 172.9C45.5 259.9 104.2 139.7 128 86.9c0 0 7.8 5.5 14.5-2.4-11.6-1.8-37.7-5.5-41.4-36.5 12.3-1.3 20.4-1.5 36.6 12.1Z"></path></svg></svg>',
+		'<svg class="MarketplaceTradeRoutes"><svg viewBox="0 0 217.3 220" class="outline"><path d="M190.3 31.3c-95.5-105.1-266 81.1-152.9 167 93 80.1 241.2-80.9 152.9-167ZM29.9 129.5c0-1.5.2-3 .4-4.5l41.4-6.3c.7 2.3 1.6 4.4 2.8 6.4l-37.8 41.3c-5.3-10.7-7.6-23.3-6.8-37Zm22.8-57.6 22.5 20.6c-1.5 2.8-2.7 5.7-3.5 8.7l-37.5 5.7C38 94.6 44.3 82.8 52.7 72Zm46.2-35.8-2.3 37.8c-2.9 1-5.7 2.4-8.3 4.2L65.8 57.5C75.8 48.2 87 41 98.9 36.1ZM135 91.6c-.7-2.2-1.5-4.3-2.7-6.3l40.3-44c9.4 11.3 14.5 25.9 14.8 42.4L135 91.6Zm-34.5 27.9c-13.6 2.2-13.6-14.9-5.8-22.2 25.8-22.4 31.4 17 5.8 22.2Zm20.1-44.9c-2.1-1-4.3-1.7-6.6-2.1l2.6-41.7c13.7-2.9 29-2.3 41.7 2.6l-37.7 41.2Zm-34.5 61.1c2.1 1 4.3 1.7 6.6 2.2l-3.3 52.9c-16.4 1.2-31.5-2.6-43.6-11l40.3-44Zm24 .7c2.9-1 5.7-2.5 8.3-4.2l33 30.2c-13.1 12.2-28.4 20.9-44.4 25.4l3.2-51.3Zm54.4 11.6-33-30.2c1.5-2.8 2.7-5.7 3.5-8.7l50.8-7.7c-3 16.3-10.3 32.4-21.4 46.6Z"></path></svg><svg viewBox="0 0 217.3 220" class="icon"><path d="M190.3 31.3c-95.5-105.1-266 81.1-152.9 167 93 80.1 241.2-80.9 152.9-167ZM29.9 129.5c0-1.5.2-3 .4-4.5l41.4-6.3c.7 2.3 1.6 4.4 2.8 6.4l-37.8 41.3c-5.3-10.7-7.6-23.3-6.8-37Zm22.8-57.6 22.5 20.6c-1.5 2.8-2.7 5.7-3.5 8.7l-37.5 5.7C38 94.6 44.3 82.8 52.7 72Zm46.2-35.8-2.3 37.8c-2.9 1-5.7 2.4-8.3 4.2L65.8 57.5C75.8 48.2 87 41 98.9 36.1ZM135 91.6c-.7-2.2-1.5-4.3-2.7-6.3l40.3-44c9.4 11.3 14.5 25.9 14.8 42.4L135 91.6Zm-34.5 27.9c-13.6 2.2-13.6-14.9-5.8-22.2 25.8-22.4 31.4 17 5.8 22.2Zm20.1-44.9c-2.1-1-4.3-1.7-6.6-2.1l2.6-41.7c13.7-2.9 29-2.3 41.7 2.6l-37.7 41.2Zm-34.5 61.1c2.1 1 4.3 1.7 6.6 2.2l-3.3 52.9c-16.4 1.2-31.5-2.6-43.6-11l40.3-44Zm24 .7c2.9-1 5.7-2.5 8.3-4.2l33 30.2c-13.1 12.2-28.4 20.9-44.4 25.4l3.2-51.3Zm54.4 11.6-33-30.2c1.5-2.8 2.7-5.7 3.5-8.7l50.8-7.7c-3 16.3-10.3 32.4-21.4 46.6Z"></path></svg></svg>',
+		'<svg class="ExpansionCulturePoints"><svg viewBox="0 0 250 250" class="outline"><path d="M90.5 197.3A33.4 15.3 173.2 0 1 24.3 205.2A33.4 15.3 173.2 0 1 90.5 197.3ZM73.6 188.3A26.5 12.4 -117.2 0 1 49.3 141.2A26.5 12.4 -117.2 0 1 73.6 188.3ZM55.6 172.4A31.3 14.5 -159.8 0 1 -3.2 150.7A31.3 14.5 -159.8 0 1 55.6 172.4ZM44.5 156.6A24.6 11.6 -90.2 0 1 44.4 107.3A24.6 11.6 -90.2 0 1 44.5 156.6ZM35.7 134.3A29.3 13.6 -132.8 0 1 -4.1 91.3A29.3 13.6 -132.8 0 1 35.7 134.3ZM33.1 115.2A22.8 10.9 -63.2 0 1 53.6 74.6A22.8 10.9 -63.2 0 1 33.1 115.2ZM35.4 91.3A27.3 12.8 -105.8 0 1 20.5 38.8A27.3 12.8 -105.8 0 1 35.4 91.3ZM41.6 73.1A20.9 10.1 -36.2 0 1 75.4 48.4A20.9 10.1 -36.2 0 1 41.6 73.1ZM54.5 52.9A25.2 11.9 -78.8 0 1 64.3 3.3A25.2 11.9 -78.8 0 1 54.5 52.9ZM68.4 39.5A19.1 9.3 -9.2 0 1 106.0 33.4A19.1 9.3 -9.2 0 1 68.4 39.5ZM89.1 27.3A23.2 11.1 -51.8 0 1 117.8 -9.2A23.2 11.1 -51.8 0 1 89.1 27.3ZM107.4 21.7A17.2 8.6 17.8 0 1 140.2 32.2A17.2 8.6 17.8 0 1 107.4 21.7ZM159.5 197.3A33.4 15.3 6.8 0 1 225.7 205.2A33.4 15.3 6.8 0 1 159.5 197.3ZM176.4 188.3A26.5 12.4 -62.8 0 1 200.7 141.2A26.5 12.4 -62.8 0 1 176.4 188.3ZM194.4 172.4A31.3 14.5 -20.2 0 1 253.2 150.7A31.3 14.5 -20.2 0 1 194.4 172.4ZM205.5 156.6A24.6 11.6 -89.8 0 1 205.6 107.3A24.6 11.6 -89.8 0 1 205.5 156.6ZM214.3 134.3A29.3 13.6 -47.2 0 1 254.1 91.3A29.3 13.6 -47.2 0 1 214.3 134.3ZM216.9 115.2A22.8 10.9 -116.8 0 1 196.4 74.6A22.8 10.9 -116.8 0 1 216.9 115.2ZM214.6 91.3A27.3 12.8 -74.2 0 1 229.5 38.8A27.3 12.8 -74.2 0 1 214.6 91.3ZM208.4 73.1A20.9 10.1 -143.8 0 1 174.6 48.4A20.9 10.1 -143.8 0 1 208.4 73.1ZM195.5 52.9A25.2 11.9 -101.2 0 1 185.7 3.3A25.2 11.9 -101.2 0 1 195.5 52.9ZM181.6 39.5A19.1 9.3 -170.8 0 1 144.0 33.4A19.1 9.3 -170.8 0 1 181.6 39.5ZM160.9 27.3A23.2 11.1 -128.2 0 1 132.2 -9.2A23.2 11.1 -128.2 0 1 160.9 27.3ZM142.6 21.7A17.2 8.6 162.2 0 1 109.8 32.2A17.2 8.6 162.2 0 1 142.6 21.7ZM104.8 206.9A97 97 0 0 1 99.9 18.3L102.5 28.0A87 87 0 0 0 106.9 197.1ZM145.2 206.9A97 97 0 0 0 150.1 18.3L147.5 28.0A87 87 0 0 1 143.1 197.1ZM103 192h44l18 46-40-20-40 20Z"></path></svg><svg viewBox="0 0 250 250" class="icon"><path d="M90.5 197.3A33.4 15.3 173.2 0 1 24.3 205.2A33.4 15.3 173.2 0 1 90.5 197.3ZM73.6 188.3A26.5 12.4 -117.2 0 1 49.3 141.2A26.5 12.4 -117.2 0 1 73.6 188.3ZM55.6 172.4A31.3 14.5 -159.8 0 1 -3.2 150.7A31.3 14.5 -159.8 0 1 55.6 172.4ZM44.5 156.6A24.6 11.6 -90.2 0 1 44.4 107.3A24.6 11.6 -90.2 0 1 44.5 156.6ZM35.7 134.3A29.3 13.6 -132.8 0 1 -4.1 91.3A29.3 13.6 -132.8 0 1 35.7 134.3ZM33.1 115.2A22.8 10.9 -63.2 0 1 53.6 74.6A22.8 10.9 -63.2 0 1 33.1 115.2ZM35.4 91.3A27.3 12.8 -105.8 0 1 20.5 38.8A27.3 12.8 -105.8 0 1 35.4 91.3ZM41.6 73.1A20.9 10.1 -36.2 0 1 75.4 48.4A20.9 10.1 -36.2 0 1 41.6 73.1ZM54.5 52.9A25.2 11.9 -78.8 0 1 64.3 3.3A25.2 11.9 -78.8 0 1 54.5 52.9ZM68.4 39.5A19.1 9.3 -9.2 0 1 106.0 33.4A19.1 9.3 -9.2 0 1 68.4 39.5ZM89.1 27.3A23.2 11.1 -51.8 0 1 117.8 -9.2A23.2 11.1 -51.8 0 1 89.1 27.3ZM107.4 21.7A17.2 8.6 17.8 0 1 140.2 32.2A17.2 8.6 17.8 0 1 107.4 21.7ZM159.5 197.3A33.4 15.3 6.8 0 1 225.7 205.2A33.4 15.3 6.8 0 1 159.5 197.3ZM176.4 188.3A26.5 12.4 -62.8 0 1 200.7 141.2A26.5 12.4 -62.8 0 1 176.4 188.3ZM194.4 172.4A31.3 14.5 -20.2 0 1 253.2 150.7A31.3 14.5 -20.2 0 1 194.4 172.4ZM205.5 156.6A24.6 11.6 -89.8 0 1 205.6 107.3A24.6 11.6 -89.8 0 1 205.5 156.6ZM214.3 134.3A29.3 13.6 -47.2 0 1 254.1 91.3A29.3 13.6 -47.2 0 1 214.3 134.3ZM216.9 115.2A22.8 10.9 -116.8 0 1 196.4 74.6A22.8 10.9 -116.8 0 1 216.9 115.2ZM214.6 91.3A27.3 12.8 -74.2 0 1 229.5 38.8A27.3 12.8 -74.2 0 1 214.6 91.3ZM208.4 73.1A20.9 10.1 -143.8 0 1 174.6 48.4A20.9 10.1 -143.8 0 1 208.4 73.1ZM195.5 52.9A25.2 11.9 -101.2 0 1 185.7 3.3A25.2 11.9 -101.2 0 1 195.5 52.9ZM181.6 39.5A19.1 9.3 -170.8 0 1 144.0 33.4A19.1 9.3 -170.8 0 1 181.6 39.5ZM160.9 27.3A23.2 11.1 -128.2 0 1 132.2 -9.2A23.2 11.1 -128.2 0 1 160.9 27.3ZM142.6 21.7A17.2 8.6 162.2 0 1 109.8 32.2A17.2 8.6 162.2 0 1 142.6 21.7ZM104.8 206.9A97 97 0 0 1 99.9 18.3L102.5 28.0A87 87 0 0 0 106.9 197.1ZM145.2 206.9A97 97 0 0 0 150.1 18.3L147.5 28.0A87 87 0 0 1 143.1 197.1ZM103 192h44l18 46-40-20-40 20Z"></path></svg></svg>'
 	];
+
+// village quick links: [type, icon (img_bigIcon), Dorf2 index (-1 - always available), link]
+var qlTypes = [ // Travian Plus links in its own order, then the script ones
+	['BlacksmithManagement', 14, 11, '&gid=13'],
+	['RallyPointOverview', 0, -1, '/build.php?id=39&gid=16&tt=1'],
+	['RallyPointSendTroops', 12, -1, '/build.php?id=39&gid=16&tt=2'],
+	['RallyPointFarmList', 13, -1, '/build.php?id=39&gid=16&tt=99'],
+	['MarketplaceSendResources', 4, 0, '&gid=17&t=5'],
+	['MarketplaceTradeRoutes', 17, 0, '&gid=17&t=3'],
+	['MarketplaceBuy', 5, 0, '&gid=17&t=1'],
+	['BarracksManagement', 1, 1, '&gid=19'],
+	['GreatBarracksManagement', 8, 5, '&gid=29'],
+	['StableManagement', 2, 2, '&gid=20'],
+	['GreatStableManagement', 9, 6, '&gid=30'],
+	['WorkshopManagement', 3, 3, '&gid=21'],
+	['TownHallCelebration', 11, 10, '&gid=24&t=1'],
+	['HerosMansionManagement', 15, 12, '&gid=37'],
+	['HospitalManagement', 10, [7,8], ['&gid=46','&gid=48']], // hospital or asclepeion
+	['ExpansionTrain', 16, [13,14,15], ['&gid=25&s=1','&gid=26&s=1','&gid=44&s=1']],
+	['ExpansionCulturePoints', 18, [13,14,15], ['&gid=25&s=2','&gid=26&s=2','&gid=44&s=2']],
+	['Alliance', 6, -1, '/alliance'],
+	['AllianceReports', 6, -1, '/alliance/reports']
+];
+
+var qlSvgClose = '<svg><svg viewBox="0 0 20 20" class="outline"><path d="M0 17.01L7.01 10 .14 3.13 3.13.14 10 7.01 17.01 0 20 2.99 12.99 10l6.87 6.87-2.99 2.99L10 12.99 2.99 20 0 17.01z"></path></svg><svg viewBox="0 0 20 20" class="icon"><path d="M0 17.01L7.01 10 .14 3.13 3.13.14 10 7.01 17.01 0 20 2.99 12.99 10l6.87 6.87-2.99 2.99L10 12.99 2.99 20 0 17.01z"></path></svg></svg>';
+var qlSvgIndicator = '<svg viewBox="0 0 44 44" class="editSlotIndicator"><path d="M22 44h-.5v-1h.5c1.2 0 2.4 0 3.5-.3l.2 1c-1.2.2-2.4.3-3.7.3Zm-3.6-.3c-1.4-.2-2.7-.6-4-1.1l.3-.9c1.2.5 2.5.8 3.8 1l-.2 1Zm10.3-.7-.3-1c1.3-.4 2.5-.9 3.6-1.6l.5.9c-1.2.7-2.5 1.2-3.8 1.6Zm-17.1-1.6c-1.2-.7-2.4-1.4-3.4-2.3l.6-.8c1 .8 2.1 1.6 3.3 2.2l-.5.9Zm23.5-1.7-.6-.8c1.1-.8 2-1.7 2.9-2.7l.7.7c-.9 1-2 2-3.1 2.8ZM5.9 36.9c-.9-1-1.8-2.1-2.5-3.3l.8-.5c.7 1.1 1.5 2.2 2.4 3.1l-.7.7Zm34.2-2.5-.8-.6c.7-1.1 1.4-2.3 1.9-3.5l.9.4c-.6 1.3-1.2 2.5-2 3.6ZM1.9 30.9C1.3 29.6.9 28.3.6 27l1-.2c.3 1.3.7 2.5 1.3 3.8L2 31Zm41.3-3-1-.3c.4-1.3.6-2.6.7-3.9h1c-.1 1.5-.4 2.8-.7 4.2ZM0 23.9V22c0-.8 0-1.5.1-2.3h1c0 .8-.1 1.5-.1 2.3v1.8H0Zm43-3.2c0-1.3-.3-2.6-.6-3.9l1-.2c.3 1.3.6 2.7.6 4.1h-1ZM1.6 16.9l-1-.2c.3-1.3.8-2.7 1.4-3.9l.9.4c-.6 1.2-1 2.5-1.3 3.7ZM41.4 14c-.5-1.2-1.1-2.4-1.8-3.5l.8-.5c.8 1.2 1.4 2.4 1.9 3.7l-.9.4Zm-37-3.4-.8-.5c.8-1.2 1.6-2.3 2.6-3.3l.7.7c-.9 1-1.7 2-2.5 3.1Zm33.4-2.5c-.9-1-1.8-1.9-2.9-2.7l.6-.8c1.1.8 2.1 1.8 3 2.8l-.8.7ZM9 5.5l-.6-.8c1.1-.9 2.3-1.6 3.5-2.2l.5.9c-1.2.6-2.3 1.3-3.3 2.1Zm23.4-1.7c-1.1-.7-2.4-1.2-3.6-1.6l.3-.9c1.3.4 2.6 1 3.8 1.7l-.5.9ZM15.1 2.2l-.3-.9c1.3-.5 2.7-.8 4-1v1c-1.2.2-2.5.5-3.7.9Zm10.8-.8C24.6 1.2 23.3 1 22 1V0c1.4 0 2.8.1 4.1.4l-.2 1Z"></path></svg>';
+
+function qlTypeIndex ( key ) {
+	for( var i = 0; i < qlTypes.length; i++ ) if( qlTypes[i][0] == key ) return i;
+	return -1;
+}
+
+function qlLink ( t ) {
+	var ql = qlTypes[t];
+	if( ql[2] === -1 ) return ql[3];
+	var dIdx = typeof ql[2] == 'number' ? [ql[2]] : ql[2];
+	var dLink = typeof ql[3] == 'string' ? [ql[3]] : ql[3];
+	for( var i = 0; i < dIdx.length; i++ )
+		if( RB.village_Dorf2[dIdx[i]] != 0 ) return '/build.php?id=' + RB.village_Dorf2[dIdx[i]] + dLink[i];
+	if( RB.village_Dorf2[16] == 1 ) return ''; // dorf2 was seen and the building is missing
+	return '/build.php?' + dLink[0].substring(1);
+}
+
+function qlHeader () {
+	var box = $g('sidebarBoxActiveVillage');
+	return box ? $gc('buttonsWrapper', box)[0] : undefined;
+}
+
+// quick link types configured in the native Travian slots
+function qlNativeSlots ( header ) {
+	var types = [];
+	if( ! header ) return types;
+	var slots = header.querySelectorAll(':scope > .quickLinkSlot');
+	for( var i = 0; i < slots.length && i < 5; i++ ) {
+		var a = $gt('a', slots[i])[0];
+		var key = '';
+		if( a ) try { key = JSON.parse(a.getAttribute('data-load-tooltip-data')).type; } catch(e) {}
+		types.push( qlTypeIndex(key) >= 0 ? key : '-' );
+	}
+	return types;
+}
+
+function qlDefaultSlots () {
+	return ['BarracksManagement','GreatBarracksManagement','StableManagement','GreatStableManagement','WorkshopManagement',
+		'Alliance','HerosMansionManagement','ExpansionCulturePoints','BlacksmithManagement','HospitalManagement'];
+}
+
+// first row from the native Plus slots, second row from the defaults
+function qlImportSlots ( slots, header ) {
+	var nat = qlNativeSlots(header);
+	if( nat.join('').replace(/-/g,'') == '' ) return slots;
+	var res = slots.slice();
+	for( var i = 0; i < 5; i++ ) res[i] = nat[i] || '-';
+	for( var i = 5; i < 10; i++ ) if( res.slice(0,5).indexOf(res[i]) >= 0 ) res[i] = '-';
+	return res;
+}
+
+function qlCurrentSlots () {
+	if( RB.qlSlots[0] != '' ) return RB.qlSlots.slice();
+	var def = qlDefaultSlots();
+	return plusAccount ? qlImportSlots(def, qlHeader()) : def;
+}
+
+function qlButton ( key, cl ) {
+	var t = qlTypeIndex(key);
+	if( t < 0 ) return null;
+	var href = qlLink(t);
+	var name = gtext('qlnames')[t];
+	var btn = $ee('a', img_bigIcon[qlTypes[t][1]], [['class',cl + ' green' + (href ? '' : ' disabled')],['title',/Management$/.test(key) ? name[0] : name[0] + ': ' + name[1]]]);
+	if( href && ! qlEdit ) btn.href = href;
+	return btn;
+}
+
+// edit mode of the village quick links, works like the Travian Plus one
+var qlEdit = false;
+var qlDrag = '';
+
+function qlSave ( slots ) {
+	RB.qlSlots = slots;
+	saveCookie('QL', 'qlSlots');
+	qlDrag = '';
+	villageQuickLinks();
+	qlDialogList();
+}
+
+function qlDrop ( n ) {
+	var slots = qlCurrentSlots();
+	if( /^s\d$/.test(qlDrag) ) {
+		var from = parseInt(qlDrag.substring(1));
+		var tmp = slots[n]; slots[n] = slots[from]; slots[from] = tmp;
+	} else if( qlTypeIndex(qlDrag) >= 0 ) {
+		var j = slots.indexOf(qlDrag);
+		if( j >= 0 ) slots[j] = slots[n];
+		slots[n] = qlDrag;
+	} else return;
+	qlSave(slots);
+}
+
+// dropping a slot outside of the slots clears it
+function qlDropRemove ( el ) {
+	el.addEventListener('dragover', function(e) { if( /^s\d$/.test(qlDrag) ) e.preventDefault(); }, false);
+	el.addEventListener('drop', function(e) {
+		if( ! /^s\d$/.test(qlDrag) ) return;
+		e.preventDefault();
+		var slots = qlCurrentSlots();
+		slots[parseInt(qlDrag.substring(1))] = '-';
+		qlSave(slots);
+	}, false);
+}
+
+function qlDraggable ( btn, slot, data ) {
+	btn.setAttribute('draggable','true');
+	btn.addEventListener('dragstart', function(e) {
+		qlDrag = data;
+		e.dataTransfer.setData('text/plain', data);
+		e.dataTransfer.effectAllowed = 'move';
+		slot.classList.add('highlightDragSource');
+	}, false);
+	btn.addEventListener('dragend', function() { slot.classList.remove('highlightDragSource'); }, false);
+}
+
+function qlSlot ( key, n ) {
+	var slot = $e('div',[['class','quickLinkSlot' + (qlEdit ? ' editMode' : '')]]);
+	var btn = qlButton(key, 'textButtonV2 buttonFramed layoutButton round withIcon');
+	slot.appendChild(btn ? btn : $e('div',[['class','slot']]));
+	slot.insertAdjacentHTML('beforeend', qlSvgIndicator);
+	if( ! qlEdit ) return slot;
+	if( btn ) qlDraggable(btn, slot, 's'+n);
+	slot.addEventListener('dragover', function(e) { e.preventDefault(); }, false);
+	slot.addEventListener('dragenter', function(e) { e.preventDefault(); slot.classList.add('highlightDropTarget'); }, false);
+	slot.addEventListener('dragleave', function(e) { if( ! slot.contains(e.relatedTarget) ) slot.classList.remove('highlightDropTarget'); }, false);
+	slot.addEventListener('drop', function(e) { e.preventDefault(); e.stopPropagation(); qlDrop(n); }, false);
+	return slot;
+}
+
+function qlEscape ( e ) {
+	if( e.key == 'Escape' ) qlCloseEdit();
+}
+
+function qlOpenEdit () {
+	qlEdit = true;
+	villageQuickLinks();
+	qlDialog();
+	document.addEventListener('keydown', qlEscape, false);
+}
+
+function qlCloseEdit () {
+	qlEdit = false;
+	var d = $g('rbQLDialog');
+	if( d ) d.parentNode.removeChild(d);
+	document.removeEventListener('keydown', qlEscape, false);
+	villageQuickLinks();
+}
+
+function qlDialog () {
+	var d = $g('rbQLDialog');
+	if( d ) d.parentNode.removeChild(d);
+	d = $e('div',[['id','rbQLDialog'],['style','position:fixed;inset:0;z-index:1500;pointer-events:none;']]);
+	d.innerHTML = '<div class="dialogOverlay doNotCoverHeader stickToHeader dialogVisible"><div class="dialogWrapper dialogV2"><div class="dialog basic quickLinksDialog"><div class="dialogContainer"><div class="dialogContents"><form><div class="dialogDragBar"></div>' +
+		'<div class="dialogCancelButton buttonFramed green withIcon rectangle cancel">' + qlSvgClose + '</div>' +
+		'<div class="content" style="background-color:transparent;margin:0;padding:var(--dialogContentPadding, 20px);"><div class="contentV2 activeVillageQuickLinks"><h3 style="margin:5px 0 15px;font-size:16px;"></h3><div class="subtitle"></div><div class="quickLinksWrapper quickLinks"></div></div></div></form></div></div></div></div></div>';
+	$gt('h3', d)[0].textContent = gtext('qltitle');
+	$gc('subtitle', d)[0].textContent = gtext('qlhint');
+	$gc('dialogCancelButton', d)[0].addEventListener('click', qlCloseEdit, false);
+	$gt('form', d)[0].addEventListener('submit', function(e) { e.preventDefault(); }, false);
+	qlDropRemove($gc('dialog', d)[0]);
+	document.body.appendChild(d);
+	qlDialogList();
+}
+
+function qlDialogList () {
+	var d = $g('rbQLDialog');
+	if( ! d ) return;
+	var list = $gc('quickLinksWrapper', d)[0];
+	list.innerHTML = '';
+	var slots = qlCurrentSlots();
+	for( var t = 0; t < qlTypes.length; t++ ) {
+		var key = qlTypes[t][0];
+		var name = gtext('qlnames')[t];
+		var slot = $e('div',[['class','quickLinkSlot editMode']]);
+		if( slots.indexOf(key) >= 0 ) {
+			slot.appendChild($ee('div', img_bigIcon[qlTypes[t][1]], [['class','slot'],['title',gtext('qlused')]]));
+		} else {
+			var btn = $ee('a', img_bigIcon[qlTypes[t][1]], [['class','textButtonV2 buttonFramed layoutButton round withIcon green']]);
+			qlDraggable(btn, slot, key);
+			slot.appendChild(btn);
+		}
+		slot.insertAdjacentHTML('beforeend', qlSvgIndicator);
+		list.appendChild($em('div',[slot, $ee('div',name[0],[['class','quickLinkTitle']]), $ee('div',name[1],[['class','quickLinkTab']])]));
+	}
+}
+
+function villageQuickLinks () {
+	var header = qlHeader();
+	if( ! header ) return;
+	var box = $g('sidebarBoxActiveVillage');
+	var old = $g('rbQuickLinks');
+	if( old ) old.parentNode.removeChild(old);
+	old = $g('rbQuickLinks2');
+	if( old ) old.parentNode.removeChild(old);
+	old = $g('rbQLOverlay');
+	if( old ) old.parentNode.removeChild(old);
+
+	// darken the page around the village box while editing
+	var sidebar = $g('sidebarAfterContent');
+	if( qlEdit ) {
+		box.classList.add('editQuickLinks');
+		if( sidebar ) sidebar.classList.add('editQuickLinks');
+		var overlay = $e('div',[['id','rbQLOverlay'],['class','editQuickLinksOverlay']]);
+		overlay.addEventListener('click', qlCloseEdit, false);
+		qlDropRemove(overlay);
+		box.insertBefore(overlay, box.firstChild);
+	} else {
+		box.classList.remove('editQuickLinks');
+		if( sidebar ) sidebar.classList.remove('editQuickLinks');
+	}
+
+	var nativeSettings = header.querySelector(':scope > .settings');
+	if( nativeSettings ) plusAccount = ! nativeSettings.classList.contains('gold');
+	var slots = qlCurrentSlots();
+
+	// first row replaces the native quick links
+	for( var i = 0; i < header.children.length; i++ ) header.children[i].style.display = 'none';
+	var row1 = $e('div',[['id','rbQuickLinks'],['style','display:grid;grid-auto-flow:column;align-items:center;column-gap:var(--headerButtonsGap);']]);
+	for( var i = 0; i < 5; i++ ) row1.appendChild(qlSlot(slots[i], i));
+	var gear;
+	if( nativeSettings ) {
+		gear = nativeSettings.cloneNode(true);
+		gear.removeAttribute('aria-describedby');
+		gear.classList.remove('gold','editMode');
+		gear.classList.add('grey');
+		gear.style.display = '';
+	} else {
+		gear = $ee('button','&#9881;',[['type','button'],['class','textButtonV2 buttonFramed layoutButton settings round withIcon grey']]);
+	}
+	if( qlEdit ) {
+		gear.classList.add('editMode');
+		gear.innerHTML = qlSvgClose;
+	}
+	gear.setAttribute('title', gtext('qltitle'));
+	gear.addEventListener('click', function() { qlEdit ? qlCloseEdit() : qlOpenEdit(); }, false);
+	row1.appendChild(gear);
+	header.appendChild(row1);
+
+	// hangs on the bottom edge of the village box without moving the boxes below; same grid and side margin
+	// as the first row, the last column stands in for the settings button
+	var row2 = $e('div', [['id','rbQuickLinks2'],['class','quickLinks'],['style','position:absolute;z-index:2;top:calc(100% - 32px);inset-inline-end:var(--headerButtonsMargin);margin:0;display:grid;grid-auto-flow:column;align-items:center;column-gap:var(--headerButtonsGap);']]);
+	var used = false;
+	for( var i = 5; i < 10; i++ ) {
+		if( qlTypeIndex(slots[i]) >= 0 ) used = true;
+		row2.appendChild(qlSlot(slots[i], i));
+	}
+	row2.appendChild($e('div',[['class','settings'],['style','visibility:hidden;']]));
+	if( used || qlEdit ) box.appendChild(row2);
+}
+
+function bigQuickLinks () {
+	villageQuickLinks();
 
 	var bigIcon = [ // [type (true-id, false-ref), value, additional, img_ID, Dict, Dict additionnal, Background]
 		[false, '/build.php?id=39&gid=16&tt=1', '', 0, 6, 31, 0], // RP Overview
@@ -6850,108 +7182,6 @@ function bigQuickLinks () {
 		[false, '/build.php?id=39&gid=16&tt=99', '', 13, 22, 0, 4], // FarmList
 		[true, 11, '&gid=13', 14, 30, 0, 4] // Smithy
 	];
-	//dorf2 0-market, 1-barracks, 2-stable, 3-workshop, 4-Tournament Square, 5-Great Barracks, 6-Great Stable, 7-Hospital, 8-Asclepeion, 9-Harbor, 10-Town Hall, 11-Smithy
-	var t = 0;
-	var tt = [];
-	for( var t = 0; t < bigIcon.length; t++) {
-		tt[t] = bigIcon[t][4] > 0 ? RB.dictionary[bigIcon[t][4]] : '';
-		if( bigIcon[t][5] > 0 ) tt[t] += ', ' + RB.dictionary[bigIcon[t][5]];
-	}
-
-	function CreateBigLinkButton (strBuilding, iNo, img) {
-		//if (iNo != 10) var imgC = img.cloneNode(true); else imgC = img;
-		//if (iNo == 8) { imgC.style.height = '20px'; }
-		//if (iNo == 9) { imgC.style.height = '23px'; }
-		var pos = '';
-		if (iNo == 8 || iNo == 9 || iNo == 10 || iNo == 11 || iNo == 12) { pos = RB.village_Dorf2[bigIcon[iNo][1]] != 0 ? '' : 'visibility:hidden;' }
-		var BigLinkButton = $e('a',[['title',tt[iNo]],['class','layoutButton buttonFramed withIcon round ' + strBuilding + ' green ' + (RB.village_Dorf2[bigIcon[iNo][1]] != 0 ? '' : 'disabled')],['style',pos]]);
-		//if (iNo!=0 && iNo!=8 && iNo!=9 && RB.village_Dorf2[bigIcon[iNo][1]] != 0) {
-		//	BigLinkButton.setAttribute('onmouseenter', "Travian.Game.Layout.loadLayoutButtonTitle(this, 'activeVillage', '"+strBuilding+"'); this.removeAttribute('onmouseenter')");
-		//}
-		//BigLinkButton.appendChild(imgC);
-		BigLinkButton.innerHTML = img_bigIcon[bigIcon[iNo][3]];
-		if( bigIcon[iNo][0] ) {
-			if( RB.village_Dorf2[bigIcon[iNo][1]] != 0 ) { BigLinkButton.href = "/build.php?id="+RB.village_Dorf2[bigIcon[iNo][1]]+bigIcon[iNo][2]; }
-		} else { BigLinkButton.href = bigIcon[iNo][1]; }
-		//if (iNo == 8 || iNo == 9) { BigLinkButton.appendChild($e('img', [['class','productionBoost'],['src','/img/x.gif'],['style','position:absolute;'+docDir[0]+':20px;top:4px;z-index:1000']])); }
-		if (iNo >= 6) { ltr ? BigLinkButton.style.marginLeft = "5px" : BigLinkButton.style.marginRight = "5px"; }
-		if (villageBoxes && iNo < 6) { BigLinkButton.style.margin = "2px"; }
-		return BigLinkButton;
-	}
-
-	var sidebarBoxActiveVillage = $g('sidebarBoxActiveVillage');
-	var bigIconsHeader = $gc('buttonsWrapper', sidebarBoxActiveVillage)[0];
-	var bigIconsFooter = $gc('content', sidebarBoxActiveVillage)[0];
-	var villageBoxes = $g('villageBoxes');
-	if (villageBoxes) {
-		var childrenB = $gt('button',bigIconsHeader);
-	} else {
-		var childrenB = $gt('a',bigIconsHeader);
-	}
-	if (childrenB.length < 1) return;
-	var imgs = [];
-
-	for( var j = 0; j < childrenB.length; j++ ) {
-		imgs[j] = $gt('svg',childrenB[j])[0];
-	}
-	var vlist = $g("sidebarBoxVillageList");
-	imgs[4] = $gt('svg',vlist)[0];
-	imgs[4].style.width = '24px';
-
-	imgs[5] = $e('i', [['class','healTime_medium'],['style','filter: grayscale(100%);']]);
-
-	if (villageBoxes) {
-		var greenbuttons = $xf('.//div[contains(@class,"quickLinks")]/button[contains(@class,"settings") and contains(@class,"gold")]','l',sidebarBoxActiveVillage);
-		if( greenbuttons.snapshotLength > 0 ) {
-			var quickLinkSlot = $xf('.//div[contains(@class,"quickLinkSlot")]','l',sidebarBoxActiveVillage);
-			for( var i = 0; i < quickLinkSlot.snapshotLength; i++ ) {
-				quickLinkSlot.snapshotItem(i).style.display = "none";
-			}
-			bigIconsHeader.insertBefore(CreateBigLinkButton('workshop',1), bigIconsHeader.firstChild);
-			bigIconsHeader.insertBefore(CreateBigLinkButton('stable',5), bigIconsHeader.firstChild);
-			bigIconsHeader.insertBefore(CreateBigLinkButton('barracks',4), bigIconsHeader.firstChild);
-			bigIconsHeader.insertBefore(CreateBigLinkButton('market',2), bigIconsHeader.firstChild);
-			//bigIconsHeader.insertBefore(CreateBigLinkButton('market',6), bigIconsHeader.firstElementChild);
-			bigIconsHeader.insertBefore(CreateBigLinkButton('overview',0), bigIconsHeader.firstElementChild);
-		} else {
-			plusAccount = true;
-		}
-	} else {
-		if (childrenB[0].className.search('green') == -1 ) { //Plus account active
-			for( var j = 0; j < childrenB.length; j++ ) {
-				childrenB[j].style.display = "none";
-			}
-			bigIconsHeader.insertBefore(CreateBigLinkButton('workshop',1), bigIconsHeader.firstChild);
-			bigIconsHeader.insertBefore(CreateBigLinkButton('stable',5), bigIconsHeader.firstChild);
-			bigIconsHeader.insertBefore(CreateBigLinkButton('barracks',4), bigIconsHeader.firstChild);
-			bigIconsHeader.insertBefore(CreateBigLinkButton('market',2), bigIconsHeader.firstChild);
-		} else {
-			plusAccount = true;
-			//for( var j = 0; j < childrenB.length; j++ ) {
-				// fix links for Plus accounts
-				//childrenB[j].href = childrenB[j].href.replace('?gid=17', "?id=" + RB.village_Dorf2[bigIcon[2][1]]+bigIcon[2][2]);
-				//childrenB[j].href = childrenB[j].href.replace('?gid=19', "?id=" + RB.village_Dorf2[bigIcon[4][1]]+bigIcon[4][2]);
-				//childrenB[j].href = childrenB[j].href.replace('?gid=20', "?id=" + RB.village_Dorf2[bigIcon[5][1]]+bigIcon[5][2]);
-				//childrenB[j].href = childrenB[j].href.replace('?gid=21', "?id=" + RB.village_Dorf2[bigIcon[1][1]]+bigIcon[1][2]);
-			//}
-		}
-		//bigIconsHeader.insertBefore(CreateBigLinkButton('market',6), bigIconsHeader.firstElementChild);
-		bigIconsHeader.insertBefore(CreateBigLinkButton('overview',0), bigIconsHeader.firstElementChild);
-	}
-
-	var extraBtns = $e('div', [['class','buttonsWrapper'],['style','display: flex; flex-direction: row; justify-content: flex-end; margin: 0 -20px -40px;']]);
-	bigIconsFooter.appendChild(extraBtns);
-	extraBtns.appendChild(CreateBigLinkButton('rpsend',13));
-	extraBtns.appendChild(CreateBigLinkButton('marketsend',6));
-	extraBtns.appendChild(CreateBigLinkButton('townhall',12));
-	if (RB.Setup[2] == 7) {
-		extraBtns.appendChild(CreateBigLinkButton('asclepeion',11));
-	} else {
-		extraBtns.appendChild(CreateBigLinkButton('hospital',10));
-	}
-	extraBtns.appendChild(CreateBigLinkButton('greatbarracks',8));
-	extraBtns.appendChild(CreateBigLinkButton('greatstable',9));
-
 	var newT = $e('TABLE',[['style','width:auto;background-color:transparent;float:'+docDir[0]+';border-collapse:collapse;']]);
 	var t = 0;
 	var tdStyle = 'border:1px solid silver;background-color:'+dmColors[0]+';';
@@ -7592,6 +7822,7 @@ function buildDispatcher () {
 							if (init) {
 								init = false;
 								marketSend(); marketSumm(); marketOffer();
+								if( $gc('sendResourcesForm').length > 0 ) villageShortcuts();
 							}
 							observer.disconnect();
 						}
@@ -7618,7 +7849,7 @@ function buildDispatcher () {
 		getRPDict();
 		if( ! /tt=(99|100)/.test(crtPath) && !($g('raidList')) ) {
 			stopRP(); incomeResourcesInRP(); detectNameAttaker(); calcAllTroops(); rpFL = true;
-			if( $gc('a2b').length > 0 ) { fillXYtoRP(); rpDefaultAction(); getTroopNames(); }
+			if( $gc('a2b').length > 0 ) { fillXYtoRP(); rpDefaultAction(); getTroopNames(); villageShortcuts(); }
 		} else {
 			goldClubInfo();
 		}
@@ -9778,7 +10009,7 @@ function displayWhatIsNew () {
 			mutation.addedNodes.forEach(node => {
 				if (node.nodeType === Node.ELEMENT_NODE) {
 					if (node.getAttribute("id") == 'sidebarBoxActiveVillage' ) {
-						if( RB.Setup[16] != 0) { bigQuickLinks(); }
+						if( RB.Setup[16] != 0) { villageQuickLinks(); }
 						villageHintEdit();
 						vlist_addButtonsT4();
 					}
