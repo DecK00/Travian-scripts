@@ -2763,6 +2763,7 @@ function getUserID() {
 }
 
 var initRes = true;
+var resBaseTime = RunTime[0];
 function getResources () {
 	if( initRes ) {
 		try {
@@ -2783,12 +2784,13 @@ function getResources () {
 			fullRes[i] = maxStorage['l'+(1+i)];
 		}
 		resNow = iresNow.slice();
+		resBaseTime = Date.now();
 		initRes = false;
 		saveVCookie('vPPH', income.concat(resNow).concat(fullRes).concat(Math.round(Date.now()/1000)));
 	} else {
 		var tnow = Date.now();
 		for( var i = 0; i < 4; i++ ) {
-			resNow[i] = Math.round(((tnow-RunTime[0])/1e3)*incomepersecond[i] + iresNow[i]);
+			resNow[i] = Math.round(((tnow-resBaseTime)/1e3)*incomepersecond[i] + iresNow[i]);
 			if( resNow[i] > fullRes[i] ) resNow[i] = fullRes[i];
 			if( resNow[i] < 0 ) resNow[i] = 0;
 		}
@@ -3575,9 +3577,11 @@ function marketSend () {
 		loadVCookie('vPPH', 'village_PPH', RB.wantsMem[4]);
 		if( RB.wantsMem[4] == 0 ) return;
 		var arXY = id2xy( RB.wantsMem[4] );
-		var coordX = parseInt($gt('input',$gc('coordinateX',basee)[0])[0].getAttribute("value"));
-		var coordY = parseInt($gt('input',$gc('coordinateY',basee)[0])[0].getAttribute("value"));
-		if (arXY[0] != coordX || arXY[1] != coordY) { sendResourses( RB.wantsMem[4] ); return; }
+		var inpX = $gt('input',$gc('coordinateX',basee)[0])[0];
+		var inpY = $gt('input',$gc('coordinateY',basee)[0])[0];
+		// fill target coordinates in place instead of reloading the page
+		if (arXY[0] != parseInt(inpX.value)) updateInput(inpX,arXY[0]);
+		if (arXY[1] != parseInt(inpY.value)) updateInput(inpY,arXY[1]);
 		var htR = getTTime( calcDistance(RB.wantsMem[4], village_aid), MTime[parseInt(RB.Setup[2])]*sM, 0, 0 );
 		var ht = parseInt(RB.wantsMem[9]) < htR ? htR - parseInt(RB.wantsMem[9]): 0;
 		for( var i = 0; i < 4; i++ ) { updateInput(rxI[i],0); } //reset values so they will not overflow
@@ -3602,6 +3606,9 @@ function marketSend () {
 			if( wantRes < 0 ) wantRes = 0;
 			if( checkRes[i].checked ) updateInput(rxI[i],wantRes < resNow[i] ? wantRes: resNow[i]);
 		}
+		// M/2, M/3 -> select 2x, 3x deliveries
+		var dRadio = basee.querySelectorAll('input[type=radio][name=deliveries]')[ratio-1];
+		if( dRadio && ! dRadio.checked && ! dRadio.disabled ) dRadio.click();
 		mhRowUpdate();
 		//sendResourses( RB.wantsMem[4] );
 	}
@@ -3687,7 +3694,14 @@ function marketSend () {
 		alert( "Saved: "+ RB.wantsMem[0] +" | "+ RB.wantsMem[1] +" | "+ RB.wantsMem[2] +" | "+ RB.wantsMem[3] );
 	}
 	function mhRowLinkAMem () {
-		initRes = true; setTimeout(function() { getResources(); progressbar_ReInit(); }, 500);
+		// capture phase: the form still holds the values being sent
+		var sent = [];
+		for( var i = 0; i < 4; i++ ) {
+			sent[i] = parseInt($gn(resnames[i])[0].value);
+			if( ! isFinite(sent[i]) || sent[i] < 0 ) sent[i] = 0;
+		}
+		if( sent[0]+sent[1]+sent[2]+sent[3] == 0 ) return;
+		refreshAfterSend( sent );
 		var xx = parseInt($gt('input',$gc('coordinateX',basee)[0])[0].value);
 		var yy = parseInt($gt('input',$gc('coordinateY',basee)[0])[0].value);
 		if( isNaN(xx) || isNaN(yy) ) return;
@@ -3712,19 +3726,17 @@ function marketSend () {
 			checkRes[i].checked = true;
 		reloadMerchants();
 	}
+	var sendListenerAdded = false;
 	function addButtonsEvent ( fl ) {
-		//var ss = $gt('button',$gn('snd')[0]);
-		var ss = basee.querySelectorAll('button[type=submit]');
-		//for( i=0; i<ss.length; i++ ) ss[i].addEventListener('click', removeACh, true);
-		for( i=0; i<ss.length; i++ ) ss[i].addEventListener('click', mhRowLinkAMem, true);
-		// fix for react button doesn't trigger click event
-		document.addEventListener('click', (event) => {
-			const selector = '.textButtonV2.buttonFramed.send';
-			const button = event.target.closest(selector);
-			if (button) {
-				mhRowLinkAMem();
-			}
-		}, true);
+		// single delegated listener: React may re-render the send button, and a
+		// per-button listener plus this one used to fire twice for one click
+		if( ! sendListenerAdded ) {
+			sendListenerAdded = true;
+			document.addEventListener('click', function(event) {
+				var button = event.target.closest('.sendResourcesForm button[type=submit], .sendResourcesForm .textButtonV2.buttonFramed.send');
+				if( button && ! button.disabled ) mhRowLinkAMem();
+			}, true);
+		}
 		// travel time
 		//if( ! fl && ss.length > 0 )
 		//	addShowDistanceIn( ss[0].parentNode, -1 );
@@ -3734,9 +3746,7 @@ function marketSend () {
 		if( basee ) {
 			var ss = basee.querySelectorAll('button[type=submit]');
 			//$gc("sendRessources",$gn('snd')[0])[0].addEventListener('click', mhRowLinkAMem, true);
-			if (ss.length>0) {
-				ss[0].addEventListener('click', mhRowLinkAMem, true);
-			} else return false;
+			if (ss.length == 0) return false;
 			//addSpeedAndRTSend(basee);
 			return true;
 		} else return false;
@@ -5859,28 +5869,34 @@ function overviewTroops () {
 	return overviewD;
 }
 
+// rebuilds the currently shown tab of the overview window (null when closed)
+var overviewRefresh = null;
 function overviewAll () {
-	if( closeWindowN(1) ) { timerOv.length = 0; return; }
+	if( closeWindowN(1) ) { timerOv.length = 0; overviewRefresh = null; return; }
 	if( villages_count < 2 ) return;
 
 	function ovWarehouse () {
-		ovBuild(overviewWarehouse());
+		ovBuild(overviewWarehouse);
 	}
 	function ovResources () {
-		ovBuild(overviewResources());
+		ovBuild(overviewResources);
 	}
 	function ovTroops () {
-		ovBuild(overviewTroops());
+		ovBuild(overviewTroops);
 	}
-	function ovBuild ( ovNew ) {
-		ovDIV.removeChild(overviewD);
+	function ovBuild ( ovFunc ) {
+		ovCurrent = ovFunc;
+		timerOv.length = 0;
+		var ovNew = ovFunc();
+		ovDIV.replaceChild(ovNew, overviewD);
 		overviewD = ovNew;
-		ovDIV.appendChild(overviewD);
 	}
 	function overviewClose () {
 		timerOv.length = 0;
+		overviewRefresh = null;
 		closeWindowN(1);
 	}
+	var ovCurrent = overviewWarehouse;
 
 	var ovDIV = $e('DIV');
 	var linkOW = $a(gtext("warehouse"),[['href',jsVoid]]);
@@ -5904,6 +5920,40 @@ function overviewAll () {
 
 	ovDIV.appendChild(overviewD);
 	windowID[1] = makeFloatD(ovDIV, 2);
+	overviewRefresh = function() {
+		if( ! $g(windowID[1]) ) { overviewRefresh = null; return; }
+		ovBuild(ovCurrent);
+	};
+}
+
+// marketplace send happens without page reload. The game's resource bar ticks
+// every second from production, so wait for a real drop by the sent amount,
+// then re-read resources, save vPPH and redraw the overview.
+var refreshSendTimer = 0;
+function refreshAfterSend ( sent ) {
+	function readBar () {
+		var r = [];
+		for( var i = 0; i < 4; i++ ) r[i] = $g("l" + (1+i)) ? toNumber($g("l" + (1+i)).textContent) : NaN;
+		return r;
+	}
+	var before = readBar();
+	var tries = 0;
+	clearTimeout(refreshSendTimer);
+	function check () {
+		var now = readBar();
+		var dropped = false;
+		for( var i = 0; i < 4; i++ )
+			if( sent[i] > 0 && isFinite(now[i]) && before[i] - now[i] >= sent[i] / 2 ) dropped = true;
+		if( dropped ) {
+			initRes = true;
+			if( ! getResources() ) return;
+			progressbar_ReInit();
+			if( overviewRefresh ) overviewRefresh();
+			return;
+		}
+		if( ++tries < 20 ) refreshSendTimer = setTimeout(check, 250);
+	}
+	refreshSendTimer = setTimeout(check, 250);
 }
 
 function clearAntibot ( oldURL ) {
