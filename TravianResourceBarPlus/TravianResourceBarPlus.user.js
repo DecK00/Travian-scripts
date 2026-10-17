@@ -4856,6 +4856,8 @@ function vlist_addButtonsT4 () {
 	var villages = $gc("listEntry village",vlist);
 	var aText = $xf('//script[contains(text(),"incomingAttacksAmount")]');
 	if (aText) {aText = aText.textContent}
+	var villageIDs = [];
+	for( var i = 0; i < villages.length; i++ ) villageIDs.push(villages[i].getAttribute('data-did'));
 	if (villages.length > 0 ) {
 		for ( var vn = 0; vn < villages.length; vn++ ) {
 			var linkEl = $gt("a",villages[vn])[0];
@@ -4868,20 +4870,21 @@ function vlist_addButtonsT4 () {
 			var myVid = getVidFromCoords(coords.innerHTML);
 			villages_id[vn] = myVid;
 			if (!plusAccount) {
-				var reg = new RegExp('"id":' + villageID + ',"name.+?(?=incomingAttacksAmount)incomingAttacksAmount":(\\d+)');
-				if ( reg.test(aText) ) {
-					if (aText.match(reg)[1] != 0) {
-						//villages[vn].classList.add("attack");
-						// skip if the game (Plus) or a previous run already shows the attack icon
-						if (villages[vn].getAttribute('class').match(/attack/i) || $gc('incomingTroops',villages[vn]).length > 0) {
-							//plusAccount = true;
-						} else {
-							// same markup as the Plus icon, but without data-load-tooltip, so the game does not request the tooltip
-							var img = $e('SPAN',[['class','incomingTroops'],['title',aText.match(reg)[1]+' '+RB.dictionary[12]]]);
-							img.innerHTML = '<svg viewBox="0 0 20 19.06" width="14" height="14" fill="#d00" class="attack"><path d="M16.22 13.08l2.14-2.14-1.37-1.36-1.63 1.63-2.15-2.15 4.74-4.73L19.06 0l-4.32 1.11L10 5.85 5.26 1.11.94 0l1.11 4.33 4.74 4.73-2.15 2.15-1.63-1.63-1.37 1.36 2.14 2.14L0 16.86l2.21 2.2 3.78-3.77 2.13 2.13 1.37-1.37-1.63-1.63L10 12.28l2.14 2.14-1.63 1.63 1.37 1.37 2.14-2.13 3.77 3.77 2.21-2.2-3.78-3.78z"></path></svg>';
-							var iconWrapper = $gc('iconAndNameWrapper',villages[vn])[0] || linkEl.firstElementChild;
-							iconWrapper.prepend(img);
-						}
+				// the match must not run into the data of another village, otherwise it takes that village's attacks
+				var reg = new RegExp('"id":' + villageID + ',"name(?:(?!"id":(?:' + villageIDs.join('|') + '),"name)[^])*?incomingAttacksAmount":(\\d+)');
+				var attM = reg.exec(aText);
+				if (attM && attM[1] != 0 && !villages[vn].getAttribute('class').match(/attack/i)) {
+					var nativeIcon = $gc('incomingTroops',villages[vn])[0];
+					if (nativeIcon) {
+						// the game renders the Plus attack icon in every village and shows it only for .listEntry.attack
+						villages[vn].classList.add("attack");
+						// no game tooltip, it would be loaded from the server
+						nativeIcon.removeAttribute('data-load-tooltip');
+						nativeIcon.setAttribute('title',attM[1]+' '+RB.dictionary[12]);
+					} else {
+						var img = trImg('att1',attM[1]+' '+RB.dictionary[12]);
+						img.style.backgroundSize = "14px 14px";
+						linkEl.firstElementChild.prepend(img);
 					}
 				}
 			}
