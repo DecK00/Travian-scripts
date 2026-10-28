@@ -231,6 +231,7 @@ DICT = {
 		analyzer : "World analyzer",
 		qlicons : "Show Quick Link icons",
 		bigicon : "Show the old Quick Link icons window",
+		vstat : {troops:"Troops", resources:"Resources", warehouse:"Warehouse", production:"Production", capacity:"Capacity", own:"Own troops", support:"Troops in villages", smithy:"Smithy", hospital:"Hospital", training:"Training", village:"Village", attacks:"Attacks", building:"Construction", merchants:"Merchants", cpday:"CP/day", celebrations:"Celebrations", slots:"Slots", granary:"Granary", total:"Total", sum:"Sum:", inprogress:"In progress", research:"Research level", wounded:"Wounded troops", perhour:"per hour", hero:"Hero", time:"Time", age:"Data saved ago", nodata:"No data yet: open this village"},
 		qltitle : "Available quick links",
 		qlhint : "To change quick links, drag up to 10 buttons into the slots of your active village",
 		qlused : "Already in use",
@@ -368,6 +369,7 @@ DICT = {
 		analyzer : "Анализатор мира",
 		qlicons : "Показывать иконки быстрых ссылок",
 		bigicon : "Показывать Пункт сбора икон",
+		vstat : {troops:"Войска", resources:"Ресурсы", warehouse:"Склад", production:"Производство", capacity:"Вместимость", own:"Собственные войска", support:"Войска в деревнях", smithy:"Кузница", hospital:"Госпиталь", training:"Обучение", village:"Деревня", attacks:"Нападения", building:"Строительство", merchants:"Торговцы", cpday:"ЕК/сутки", celebrations:"Праздники", slots:"Слоты", granary:"Амбар", total:"Итого", sum:"Сумма:", inprogress:"В процессе", research:"Уровень исследования", wounded:"Раненые войска", perhour:"в час", hero:"Герой", time:"Время", age:"Данные сохранены назад", nodata:"Данных пока нет: зайдите в эту деревню"},
 		qltitle : "Доступные быстрые ссылки",
 		qlhint : "Чтобы изменить быстрые ссылки, перетяните до 10 кнопок в слоты вашей активной деревни",
 		qlused : "Уже используется",
@@ -2929,7 +2931,7 @@ acss = "table#"+allIDs[0]+" {width:100%; border-collapse:collapse; font-size:8pt
 	"table#"+allIDs[1]+" th {background-color:transparent;border:1px solid silver;height:18px;text-align:left;direction:ltr;white-space:nowrap;}" +
 	"table#"+allIDs[1]+" th a {color:black; font-size:11px;}" +
 	"."+allIDs[2]+" {width: 210px; }" +
-	"div#"+allIDs[3]+" {position:absolute;z-index:1100;border:1px solid silver;text-align:center;background-color:#FFFFE0;}" +
+	"div#"+allIDs[3]+" {position:absolute;z-index:10000;border:1px solid silver;text-align:center;background-color:#FFFFE0;}" +
 	"."+allIDs[4]+" {position:absolute;border:1px solid silver;text-align:center;background-color:white;border-radius:5px;overflow:hidden;}" +
 	"."+allIDs[5]+" {width:100%;height:7px;text-align:center;background-color: #D0D0FF;cursor:move;font-size:6pt;}"+
 	"table#"+allIDs[6]+" {width:auto;border-collapse:collapse; text-align:left; background-color:#F0F0F0; margin:1px;}" +
@@ -3422,7 +3424,6 @@ function convertCoordsInMessagesToLinks() {
 		for( var i = 0; i < mLinks.snapshotLength; i++ ) {
 			distanceTooltip(mLinks.snapshotItem(i),0);
 			sendResTropAdd(mLinks.snapshotItem(i), 1);
-			linkHint(mLinks.snapshotItem(i));
 		}
 	}
 }
@@ -4737,17 +4738,12 @@ function showDistanceIn ( vt ) { // travel time
 	if( distInVilageFL ) {
 		var vLinks = $xf(vLinksPat,'l');
 		for ( var vn = 0; vn < vLinks.snapshotLength; vn++ )
-			distInVilage[villages_id[vn]] = vLinks.snapshotItem(vn).innerHTML;
+			distInVilage[villages_id[vn]] = vNameHTML(vLinks.snapshotItem(vn));
 		distInVilageFL = false;
 	}
 	ddd = $gn('y')[0].parentNode.parentNode;
 	if( typeof distInVilage[xy] != 'undefined' ) {
 		ddd.appendChild($ee('SPAN',distInVilage[xy],[['style','margin:0px 5px;font-size:12px;'],['id',allIDs[29]]]));
-	} else {
-		var ht = getVTip(xy);
-		if( ht != '' ) {
-			ddd.appendChild($ee('SPAN',ht,[['style','color:'+vHColor+';margin:0px 5px;font-size:12px;'],['id',allIDs[29]]]));
-		}
 	}
 }
 
@@ -5306,7 +5302,6 @@ function distanceToTargetVillages() {
 				var vURL = vtLink.getAttribute("href");
 				distanceTooltip(vtLink,0);
 				sendResTropAdd(vtLink, 1);
-				linkHint(vtLink);
 				var Rej = /d=(\d+)/i;
 				var vID = Rej.exec(vURL)[1];
 				var distance = parseFloat(calcDistance( vID, village_aid ).toFixed(1));
@@ -5719,7 +5714,7 @@ function overviewWarehouse () {
 	var nowTime = Math.round((Date.now())/1000);
 	var vLinks = $xf(vLinksPat,'l');
 	for ( var vn = 0; vn < vLinks.snapshotLength; vn++ ) {
-		var vName = $a(vLinks.snapshotItem(vn).innerHTML,[['href',linkVSwitch[vn]]]);
+		var vName = $a(vNameHTML(vLinks.snapshotItem(vn)),[['href',linkVSwitch[vn]]]);
 		if( villages_id[vn] == village_aid ) $at(vName, [['style','color:#71D000;']]);
 		var newTR = $ee('TR',$c(vName));
 		loadVCookie('vPPH', 'village_PPH', villages_id[vn]);
@@ -5802,7 +5797,7 @@ function overviewResources () {
 	var nowTime = Math.round((Date.now())/1000);
 	var vLinks = $xf(vLinksPat,'l');
 	for ( var vn = 0; vn < vLinks.snapshotLength; vn++ ) {
-		var vName = $a(vLinks.snapshotItem(vn).innerHTML,[['href',linkVSwitch[vn]]]);
+		var vName = $a(vNameHTML(vLinks.snapshotItem(vn)),[['href',linkVSwitch[vn]]]);
 		if( villages_id[vn] == village_aid ) $at(vName, [['style','color:#71D000;']]);
 		var newTR = $ee('TR',$c(vName));
 		loadVCookie('vPPH', 'village_PPH', villages_id[vn]);
@@ -5860,7 +5855,7 @@ function overviewTroops () {
 	var newTBody = $e('TBODY');
 	var vLinks = $xf(vLinksPat,'l');
 	for ( var vn = 0; vn < vLinks.snapshotLength; vn++ ) {
-		var vName = $a(vLinks.snapshotItem(vn).innerHTML,[['href',linkVSwitch[vn]]]);
+		var vName = $a(vNameHTML(vLinks.snapshotItem(vn)),[['href',linkVSwitch[vn]]]);
 		if( villages_id[vn] == village_aid ) $at(vName, [['style','color:#71D000;']]);
 		var newTR = $ee('TR',$c(vName));
 
@@ -6845,7 +6840,6 @@ function addSpeedAndRTSend ( iBl, href ) {
 	for( var j = 0; j < mLinks.snapshotLength; j++ ) {
 		var existT = $gc(allIDs[29],mLinks.snapshotItem(j));
 		if( existT.length > 0 ) continue; else mLinks.snapshotItem(j).appendChild($e('SPAN',[['class',allIDs[29]]]));
-		linkHint(mLinks.snapshotItem(j));
 		distanceTooltip(mLinks.snapshotItem(j),1);
 		sendResTropAdd(mLinks.snapshotItem(j), 1);
 	}
@@ -6921,39 +6915,14 @@ function qlHeader () {
 	return box ? $gc('buttonsWrapper', box)[0] : undefined;
 }
 
-// quick link types configured in the native Travian slots
-function qlNativeSlots ( header ) {
-	var types = [];
-	if( ! header ) return types;
-	var slots = header.querySelectorAll(':scope > .quickLinkSlot');
-	for( var i = 0; i < slots.length && i < 5; i++ ) {
-		var a = $gt('a', slots[i])[0];
-		var key = '';
-		if( a ) try { key = JSON.parse(a.getAttribute('data-load-tooltip-data')).type; } catch(e) {}
-		types.push( qlTypeIndex(key) >= 0 ? key : '-' );
-	}
-	return types;
-}
-
 function qlDefaultSlots () {
 	return ['BarracksManagement','GreatBarracksManagement','StableManagement','GreatStableManagement','WorkshopManagement',
 		'Alliance','HerosMansionManagement','ExpansionCulturePoints','BlacksmithManagement','HospitalManagement'];
 }
 
-// first row from the native Plus slots, second row from the defaults
-function qlImportSlots ( slots, header ) {
-	var nat = qlNativeSlots(header);
-	if( nat.join('').replace(/-/g,'') == '' ) return slots;
-	var res = slots.slice();
-	for( var i = 0; i < 5; i++ ) res[i] = nat[i] || '-';
-	for( var i = 5; i < 10; i++ ) if( res.slice(0,5).indexOf(res[i]) >= 0 ) res[i] = '-';
-	return res;
-}
-
+// the slots configured in Travian Plus are ignored, the script keeps its own set
 function qlCurrentSlots () {
-	if( RB.qlSlots[0] != '' ) return RB.qlSlots.slice();
-	var def = qlDefaultSlots();
-	return plusAccount ? qlImportSlots(def, qlHeader()) : def;
+	return RB.qlSlots[0] != '' ? RB.qlSlots.slice() : qlDefaultSlots();
 }
 
 function qlButton ( key, cl ) {
@@ -7211,7 +7180,6 @@ function karteDistance () {
 }
 
 var tileDFL = true;
-var activeTip = '';
 function karteDistance4 () {
 	var tipE = $g(windowID[2]);
 	if( tipE ) tipE.parentNode.removeChild(tipE);
@@ -7233,16 +7201,6 @@ function karteDistance4 () {
 			if( coords.length > 0 ) {
 				var tipC = getVidFromCoords(coords[0].innerHTML);
 				if( tipC > 0 ) {
-					var newTip = getVTip(tipC);
-					if( newTip != activeTip ) {
-						activeTip = newTip;
-						if( newTip != '' ) {
-							var titleElem = $gc('title elementTitle',tipE[0]);
-							if( titleElem.length > 0 ) {
-								titleElem[0].appendChild($ee('span',newTip,[['style','color:#77FF77;margin:0px 10px;']]));
-							}
-						}
-					}
 					var dTTK = showAllTTime(0, tipC, RB.village_Var[1]);
 					$at(dTTK, [['style','background-color:#fef7e7;']]);
 					windowID[2] = makeFloat( dTTK, (ltr?contRight+5:contRight-200), contTop);
@@ -7380,7 +7338,6 @@ function villageHintEdit () {
 			RB.vHint[village_aid] = newVHint;
 			saveOVCookie('vHint', RB.vHint);
 			vName = newVHint;
-			vNFC.innerHTML = vName;
 		}
 	}
 	var vNF;
@@ -7388,23 +7345,10 @@ function villageHintEdit () {
 	vNF.style.display = 'inline-block';
 	vNF.style.overflow = 'initial';
 	var vName = RB.vHint[village_aid] || '';
-	var vNFC = $ee('SPAN',vName,[['style','color:'+vHColor+';font-size:10px;']]);
-	var vNFA = $ee('SPAN',vNFC,[['style','white-space:normal;grid-column:3;']]);
 	var vNFe = trImg(allIDs[38],gtext('name2'));
 	vNFe.addEventListener('click', editVHint, false);
-	vNFA.appendChild(vNFe);
+	var vNFA = $ee('SPAN',vNFe,[['style','white-space:normal;grid-column:3;']]);
 	vNF.parentNode.insertBefore(vNFA, vNF.nextSibling);
-}
-
-function villageHintDorf3 () {
-	var newdidVH = [];
-	for( i = 0; i < villages_id.length; i++ )
-		newdidVH[linkVSwitch[i].match(/newdid=(\d+)/i)[1]] = villages_id[i];
-	var mLinks = $xf('.//a[contains(@href, "newdid=")]', 'r', cont);
-	for( var j = 0; j < mLinks.snapshotLength; j++ ) {
-		var mLID = mLinks.snapshotItem(j).getAttribute('href').match(/newdid=(\d+)/)[1];
-		linkHint( mLinks.snapshotItem(j), newdidVH[mLID] );
-	}
 }
 
 function linkHint ( aLink, vID ) {
@@ -7413,15 +7357,27 @@ function linkHint ( aLink, vID ) {
 		if( isNaN(avID) ) return;
 	} catch(e) { return; }
 	if( RB.vHint[avID] != undefined ) {
-		aLink.appendChild($ee('SPAN',' '+RB.vHint[avID],[['style','color:'+vHColor+';']]));
+		aLink.appendChild($ee('SPAN',' '+RB.vHint[avID],[['style','color:'+vHColor+';'],['class','rbVHint']]));
 	} else {
 		var ht = getVTip(avID);
 		if( ht != '' ) {
 			var ltext = aLink.innerHTML.onlyText().length;
 			if( ltext < 20 )
-				aLink.appendChild($ee('SPAN',' '+ht.substring(0,20-ltext),[['style','color:'+vHColor+';']]));
+				aLink.appendChild($ee('SPAN',' '+ht.substring(0,20-ltext),[['style','color:'+vHColor+';'],['class','rbVHint']]));
 		}
 	}
+}
+
+// village name from the sidebar list without the second name
+function vNameClean ( nameEl ) {
+	var cl = nameEl.cloneNode(true);
+	var hints = cl.querySelectorAll('.rbVHint');
+	for( var i = 0; i < hints.length; i++ ) hints[i].remove();
+	return cl;
+}
+
+function vNameHTML ( nameEl ) {
+	return vNameClean(nameEl).innerHTML;
 }
 
 function setLC () {
@@ -8678,6 +8634,447 @@ function timeToBids () {
 	for( var i=0; i<timers.snapshotLength; i++ ) {
 		timers.snapshotItem(i).setAttribute('title',formatTime(absTime(toSeconds(timers.snapshotItem(i).innerHTML)),2));
 	}
+}
+
+/************************** village statistics without Travian Plus ****************************/
+// Without Travian Plus the server sends only the overview tab of /village/statistics, with ? instead of
+// most values, and the other tabs open the Plus shop. All tabs are drawn in place from the data the script
+// caches while playing (no extra server requests); values the server does send (merchants) are kept.
+
+var vstatTimer = 0;
+function vstatTick () {
+	var spans = $gc('rbTimer', $g('content'));
+	var now = Math.round(Date.now()/1000);
+	for( var i = 0; i < spans.length; i++ ) {
+		var left = parseInt(spans[i].getAttribute('data-rbend')) - now;
+		spans[i].textContent = formatTime(left > 0 ? left : 0, 0);
+	}
+}
+
+function villageStatistics () {
+	if( ! /^\/village\/statistics/.test(window.location.pathname) ) return;
+	var content = $g('content');
+	if( ! content ) return;
+	var plusBtn = document.querySelector('#sidebarBoxActiveVillage .buttonsWrapper > .settings');
+	if( ! plusBtn || ! plusBtn.classList.contains('gold') ) return; // Travian Plus shows the real values
+
+	var T = gtext('vstat');
+	var base = parseInt(RB.Setup[2])*10;
+	var tribe = parseInt(RB.Setup[2])+1;
+	var now = Math.round(Date.now()/1000);
+	var subTabs = {
+		resources: [['resources',T.resources],['warehouse',T.warehouse],['production',T.production],['capacity',T.capacity]],
+		troops: [['own',T.own],['support',T.support],['smithy',T.smithy],['hospital',T.hospital],['training',T.training]] };
+	var contentClass = { overview:'Overview', resources:'Resources', culturepoints:'Culturepoints', troops:'Troops' };
+	// building gid -> RB.village_Dorf2 index
+	var dorf2Idx = { 13:11, 19:1, 20:2, 21:3, 24:10, 29:5, 30:6, 46:7, 48:8 };
+
+	// cached data of every village in the village list
+	function villages () {
+		var list = [];
+		var entries = $gc('listEntry village', $g('sidebarBoxVillageList'));
+		for( var i = 0; i < entries.length; i++ ) {
+			var vid = getVidFromCoords($gc('coordinatesGrid', entries[i])[0].innerHTML);
+			var v = { did: entries[i].getAttribute('data-did'), name: vNameClean($gc('name', entries[i])[0]).textContent.trim(),
+				active: entries[i].classList.contains('active'), res: [], prod: [], cap: [] };
+			loadVCookie('vPPH', 'village_PPH', vid);
+			var pph = RB.village_PPH;
+			v.saved = parseInt(pph[12]) || 0;
+			var dt = v.saved > 0 ? now - v.saved : 0;
+			for( var r = 0; r < 4; r++ ) {
+				v.prod[r] = parseInt(pph[r]) || 0;
+				v.cap[r] = parseInt(pph[r+8]) || 0;
+				var nr = Math.round(v.prod[r]/3600 * dt + (parseInt(pph[r+4]) || 0));
+				v.res[r] = Math.max(0, Math.min(nr, v.cap[r]));
+			}
+			loadZVCookie('Dorf1', 'village_dorf1', vid); v.builds = RB.village_dorf1.slice();
+			loadZVCookie('Dorf11', 'village_dorf11', vid); v.moves = RB.village_dorf11.slice();
+			loadZVCookie('Dorf12', 'village_dorf12', vid); v.troops = RB.village_dorf12.slice();
+			loadZVCookie('Dorf14', 'village_dorf14', vid); v.progress = RB.village_dorf14.slice();
+			loadVCookie('Dorf2', 'village_Dorf2', vid); v.dorf2 = RB.village_Dorf2.slice();
+			list.push(v);
+		}
+		// the loads above replaced the active village data used elsewhere
+		loadVCookie('vPPH', 'village_PPH');
+		loadZVCookie('Dorf1', 'village_dorf1');
+		loadZVCookie('Dorf11', 'village_dorf11');
+		loadZVCookie('Dorf12', 'village_dorf12');
+		loadZVCookie('Dorf14', 'village_dorf14');
+		loadVCookie('Dorf2', 'village_Dorf2');
+		return list;
+	}
+
+	function fmt ( n ) { return '‭' + String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + '‬'; }
+	function td ( cls, content ) {
+		var c = $e('td', cls ? [['class',cls]] : undefined);
+		if( content !== undefined ) $am(c, [content]);
+		return c;
+	}
+	function none ( cls ) { return td(cls, $ee('span','-',[['class','none']])); }
+	function num ( cls, n ) { return td(((cls ? cls + ' ' : '') + (n == 0 ? 'none' : '')).trim(), String(n)); }
+	function row ( v ) { return $e('tr',[['class', v.active ? 'hl' : 'hover']]); }
+	function vlink ( v, href ) {
+		var a = $a('', [['href',href]]);
+		a.textContent = v.name;
+		a.title = v.saved > 0 ? T.age + ': ' + formatTime(now - v.saved, 4) : T.nodata;
+		return a;
+	}
+	function timer ( end ) { return $ee('span', formatTime(end - now, 0), [['class','rbTimer'],['data-rbend', end]]); }
+	function unitImg ( u, title ) { return $e('img',[['class','unit u'+u],['src','/img/x.gif'],['alt',title || (u == 'hero' ? T.hero : RB.dictTR[u])]]); }
+	function spacer ( span ) { var r = $e('tr'); r.appendChild($e('td',[['colspan',span],['class','empty']])); return r; }
+	function sumRow ( label ) { var r = $e('tr',[['class','sum']]); r.appendChild(td('vil', label)); return r; }
+	function table ( attr, heads ) {
+		var t = $e('table', [['cellpadding','1'],['cellspacing','1']].concat(attr));
+		var h = $e('tr');
+		for( var i = 0; i < heads.length; i++ ) h.appendChild(typeof heads[i] == 'object' && heads[i].tagName == 'TD' ? heads[i] : td('', heads[i]));
+		t.appendChild($ee('thead', h));
+		t.appendChild($e('tbody'));
+		return t;
+	}
+	function resIcon ( r ) { return $e('i',[['class','r'+r]]); }
+	function clock () { return $e('img',[['class','clock'],['src','/img/x.gif'],['alt',T.time]]); }
+	function unitHeads ( n, hero, tag ) {
+		var h = [];
+		for( var k = 1; k <= n; k++ ) h.push($ee(tag || 'td', unitImg(base+k), [['class','unit']]));
+		if( hero ) h.push($ee(tag || 'td', unitImg('hero'), [['class','unit']]));
+		return h;
+	}
+	// running jobs of a building: [{units: [classes], end, text}]
+	function jobs ( v, gids ) {
+		var list = [];
+		for( var i = 0; i < v.progress[0]; i++ ) {
+			var gid = parseInt(String(v.progress[i*4+1]).replace('gid',''));
+			var end = parseInt(v.progress[i*4+2]);
+			if( gids.indexOf(gid) < 0 || ! (end > now) ) continue;
+			var units = String(v.progress[i*4+3]).match(/unit u\d+/g) || [];
+			list.push({ gid: gid, units: units.map(function(c){ return c.substring(6); }), end: end, text: String(v.progress[i*4+4]) });
+		}
+		return list;
+	}
+	// cell with the running jobs of a building, a dot when the building is idle, '-' when it is missing
+	function jobCell ( v, gids, cls ) {
+		var j = jobs(v, gids);
+		var href = '/build.php?newdid=' + v.did + '&gid=' + gids[0];
+		if( j.length > 0 ) {
+			var a = $a('', [['href', '/build.php?newdid=' + v.did + '&gid=' + j[0].gid]]);
+			var last = 0;
+			for( var i = 0; i < j.length; i++ ) {
+				for( var u = 0; u < j[i].units.length; u++ ) a.appendChild(unitImg(j[i].units[u].substring(1), j[i].text));
+				if( j[i].end > last ) last = j[i].end;
+			}
+			a.appendChild($t(' '));
+			a.appendChild(timer(last));
+			return td(cls, a);
+		}
+		for( var i = 0; i < gids.length; i++ )
+			if( v.dorf2[dorf2Idx[gids[i]]] != 0 ) return td(cls, $ee('a', $ee('span','•',[['class','dot']]), [['href',href]]));
+		return none(cls);
+	}
+	function troopsOf ( v ) {
+		var t = {};
+		for( var i = 1; i + 1 < v.troops.length; i += 2 ) t[v.troops[i]] = toNumber(String(v.troops[i+1])) || 0;
+		return t;
+	}
+
+	var build = {
+		overview: function ( vs ) {
+			var t = table([['id','overview']], [T.village, T.attacks, T.building, T.troops, T.merchants]);
+			for( var i = 0; i < vs.length; i++ ) {
+				var v = vs[i], r = row(v);
+				r.appendChild(td('vil fc', vlink(v, '/dorf1.php?newdid=' + v.did)));
+				var att = td('att');
+				for( var m = 0; m < v.moves[0]; m++ ) {
+					var cls = v.moves[m*3+1], end = parseInt(v.moves[m*3+2]);
+					if( ! cls || ! (end > now) ) continue;
+					var img = $e('img',[['class',cls],['src','/img/x.gif'],['alt',String(v.moves[m*3+3])]]);
+					att.appendChild($ee('a', img, [['href','/build.php?newdid=' + v.did + '&id=39&tt=1#' + (/1$/.test(cls) ? 'at' : 'tu')]]));
+				}
+				r.appendChild(att.firstChild ? att : none('att'));
+				var bui = $a('', [['href','/dorf2.php?newdid=' + v.did]]);
+				for( var b = 0; b < v.builds[0]; b++ )
+					if( parseInt(v.builds[b*3+2]) > now ) bui.appendChild($e('img',[['class','bau'],['src','/img/x.gif'],['alt',String(v.builds[b*3+1])]]));
+				r.appendChild(bui.firstChild ? td('bui', bui) : none('bui'));
+				var tr = jobs(v, [19,20,21,29,30,25,26,44,36]);
+				if( tr.length > 0 ) {
+					var a = $a('', [['href','/build.php?newdid=' + v.did + '&gid=' + tr[0].gid]]);
+					for( var j = 0; j < tr.length; j++ ) for( var u = 0; u < tr[j].units.length; u++ ) a.appendChild(unitImg(tr[j].units[u].substring(1), tr[j].text));
+					r.appendChild(td('tro', a));
+				} else r.appendChild(none('tro'));
+				r.appendChild(none('tra lc'));
+				t.tBodies[0].appendChild(r);
+			}
+			return t;
+		},
+		resources: function ( vs ) {
+			var t = table([['id','ressources']], [T.village, resIcon(1), resIcon(2), resIcon(3), resIcon(4), T.merchants]);
+			var cls = ['lum','clay','iron','crop'], sum = [0,0,0,0];
+			for( var i = 0; i < vs.length; i++ ) {
+				var v = vs[i], r = row(v);
+				r.appendChild(td('vil fc', vlink(v, '/dorf1.php?newdid=' + v.did)));
+				for( var k = 0; k < 4; k++ ) {
+					r.appendChild(v.saved > 0 ? td(cls[k], fmt(v.res[k])) : none(cls[k]));
+					sum[k] += v.res[k];
+				}
+				r.appendChild(none('tra lc'));
+				t.tBodies[0].appendChild(r);
+			}
+			t.tBodies[0].appendChild(spacer(6));
+			var s = sumRow(T.total);
+			for( var k = 0; k < 4; k++ ) s.appendChild(td(cls[k], fmt(sum[k])));
+			s.appendChild(none('tra'));
+			t.tBodies[0].appendChild(s);
+			return t;
+		},
+		warehouse: function ( vs ) {
+			var t = table([['id','warehouse']], [T.village, resIcon(1), resIcon(2), resIcon(3), clock(), resIcon(4), clock()]);
+			var cls = ['lum','clay','iron','crop'];
+			function full ( v, k ) { return v.prod[k] > 0 && v.cap[k] > 0 ? Math.round((v.cap[k] - v.res[k]) / v.prod[k] * 3600) : Infinity; }
+			for( var i = 0; i < vs.length; i++ ) {
+				var v = vs[i], r = row(v);
+				r.appendChild(td('vil fc', vlink(v, '/dorf1.php?newdid=' + v.did)));
+				var minLeft = Infinity;
+				for( var k = 0; k < 4; k++ ) {
+					r.appendChild(v.saved > 0 && v.cap[k] > 0 ? td(cls[k], Math.floor(v.res[k] / v.cap[k] * 100) + '%') : none(cls[k]));
+					if( k < 3 ) minLeft = Math.min(minLeft, full(v, k));
+					if( k == 2 ) r.appendChild(v.saved > 0 && minLeft < Infinity ? td('max123', timer(now + minLeft)) : none('max123'));
+				}
+				var cropLeft = full(v, 3);
+				r.appendChild(v.saved > 0 && cropLeft < Infinity ? td('max4 lc', timer(now + cropLeft)) : none('max4 lc'));
+				t.tBodies[0].appendChild(r);
+			}
+			return t;
+		},
+		production: function ( vs ) {
+			var t = table([['id','production']], [T.village, resIcon(1), resIcon(2), resIcon(3), resIcon(4)]);
+			var cls = ['lum','clay','iron','crop'], sum = [0,0,0,0];
+			for( var i = 0; i < vs.length; i++ ) {
+				var v = vs[i], r = row(v);
+				r.appendChild(td('vil fc', vlink(v, '/dorf1.php?newdid=' + v.did)));
+				for( var k = 0; k < 4; k++ ) {
+					r.appendChild(v.saved > 0 ? td(cls[k], fmt(v.prod[k])) : none(cls[k]));
+					sum[k] += v.prod[k];
+				}
+				t.tBodies[0].appendChild(r);
+			}
+			t.tBodies[0].appendChild(spacer(5));
+			var s = $e('tr',[['class','sum']]);
+			var vil = td('vil', T.sum + ' ');
+			vil.appendChild($ee('span', fmt(sum[0]+sum[1]+sum[2]+sum[3]), [['class','total']]));
+			s.appendChild(vil);
+			for( var k = 0; k < 4; k++ ) s.appendChild(td(cls[k], fmt(sum[k])));
+			t.tBodies[0].appendChild(s);
+			return t;
+		},
+		capacity: function ( vs ) {
+			var t = table([['id','capacity']], [T.village, T.warehouse, T.granary]);
+			var sum = [0,0];
+			for( var i = 0; i < vs.length; i++ ) {
+				var v = vs[i], r = row(v);
+				r.appendChild(td('vil fc', vlink(v, '/dorf1.php?newdid=' + v.did)));
+				r.appendChild(v.saved > 0 ? td('max123', fmt(v.cap[0])) : none('max123'));
+				r.appendChild(v.saved > 0 ? td('max4', fmt(v.cap[3])) : none('max4'));
+				sum[0] += v.cap[0]; sum[1] += v.cap[3];
+				t.tBodies[0].appendChild(r);
+			}
+			t.tBodies[0].appendChild(spacer(3));
+			var s = sumRow(T.total);
+			s.appendChild(td('max123', fmt(sum[0])));
+			s.appendChild(td('max4', fmt(sum[1])));
+			t.tBodies[0].appendChild(s);
+			return t;
+		},
+		culturepoints: function ( vs ) {
+			var t = table([['id','culture_points']], [T.village, T.cpday, T.celebrations, T.troops, T.slots]);
+			for( var i = 0; i < vs.length; i++ ) {
+				var v = vs[i], r = row(v);
+				r.appendChild(td('vil fc', vlink(v, '/dorf1.php?newdid=' + v.did)));
+				r.appendChild(none('cps'));
+				var cel = jobs(v, [24]);
+				r.appendChild(cel.length > 0 ? td('cel', $ee('a', timer(cel[0].end), [['href','/build.php?newdid=' + v.did + '&gid=24&t=1']])) : none('cel'));
+				r.appendChild(none('tro'));
+				r.appendChild(none('slo lc'));
+				t.tBodies[0].appendChild(r);
+			}
+			t.tBodies[0].appendChild(spacer(5));
+			var s = sumRow(T.total);
+			s.appendChild(none('cps')); s.appendChild(none('cel')); s.appendChild(none('tro')); s.appendChild(none('slo'));
+			t.tBodies[0].appendChild(s);
+			return t;
+		},
+		own: function ( vs ) {
+			var heads = [$ee('th', T.village, [['class','villageName']])].concat(unitHeads(10, true));
+			var t = $e('table',[['cellpadding','1'],['cellspacing','1'],['id','troops']]);
+			t.appendChild($ee('thead', $em('tr', heads)));
+			var body = $e('tbody');
+			var sum = {};
+			for( var i = 0; i < vs.length; i++ ) {
+				var v = vs[i], r = row(v), tr = troopsOf(v);
+				r.appendChild(td('villageName', vlink(v, '/build.php?newdid=' + v.did + '&id=39#td')));
+				for( var k = 1; k <= 11; k++ ) {
+					var key = k == 11 ? 'hero' : String(base+k);
+					var n = tr[key] || 0;
+					sum[key] = (sum[key] || 0) + n;
+					r.appendChild(num('', n));
+				}
+				body.appendChild(r);
+			}
+			body.appendChild(spacer(12));
+			var s = sumRow(T.total);
+			for( var k = 1; k <= 11; k++ ) s.appendChild(num('', sum[k == 11 ? 'hero' : String(base+k)] || 0));
+			body.appendChild(s);
+			t.appendChild(body);
+			return t;
+		},
+		support: function ( vs ) {
+			var res = [];
+			for( var i = 0; i < vs.length; i++ ) {
+				var v = vs[i], tr = troopsOf(v);
+				var t = $e('table',[['cellpadding','1'],['cellspacing','1'],['class','vil_troops']]);
+				var th = $e('th',[['colspan','11']]);
+				th.appendChild(vlink(v, '/build.php?id=39&newdid=' + v.did));
+				t.appendChild($ee('thead', $ee('tr', th)));
+				var body = $e('tbody',[['class','troops']]);
+				body.appendChild($em('tr', unitHeads(10, true)));
+				var cnt = $e('tr');
+				for( var k = 1; k <= 11; k++ ) {
+					var n = tr[k == 11 ? 'hero' : String(base+k)] || 0;
+					cnt.appendChild(td(n == 0 ? 'none' : 'unit', String(n)));
+				}
+				body.appendChild(cnt);
+				body.appendChild(spacer(12));
+				t.appendChild(body);
+				var upkeep = $e('td',[['colspan','11']]);
+				upkeep.appendChild($em('div', [$ee('span','-'), ' ', resIcon(4), ' ', $ee('span', T.perhour)], [['class','consumption']]));
+				t.appendChild($ee('tbody', $ee('tr', upkeep), [['class','upkeep']]));
+				res.push($ee('div', t, [['class','troops_wrapper']]));
+			}
+			return res;
+		},
+		smithy: function ( vs ) {
+			var t = $e('table',[['cellpadding','1'],['cellspacing','1'],['class','under_progress']]);
+			var h1 = $em('tr', [$ee('th', T.village, [['rowspan','2']]), $ee('th', T.inprogress, [['class','inProgress'],['rowspan','2']]), $ee('th', T.research, [['colspan','8']])]);
+			t.appendChild($em('thead', [h1, $em('tr', unitHeads(8, false, 'th'))]));
+			var body = $e('tbody');
+			for( var i = 0; i < vs.length; i++ ) {
+				var v = vs[i], r = row(v);
+				r.appendChild(td('vil fc', vlink(v, '/build.php?newdid=' + v.did + '&gid=13')));
+				r.appendChild(jobCell(v, [13]));
+				for( var k = 0; k < 8; k++ ) r.appendChild(td('unit none', '-'));
+				body.appendChild(r);
+			}
+			t.appendChild(body);
+			return t;
+		},
+		hospital: function ( vs ) {
+			var t = $e('table',[['cellpadding','1'],['cellspacing','1'],['class','under_progress']]);
+			var h1 = $em('tr', [$ee('th', $e('i',[['class','tribe'+tribe+'_medium']]), [['rowspan','2'],['class','villageName']]),
+				$ee('th', T.inprogress, [['rowspan','2'],['class','inProgress']]), $ee('th', T.wounded, [['colspan','6']])]);
+			t.appendChild($em('thead', [h1, $em('tr', unitHeads(6, false, 'th'))]));
+			var body = $e('tbody');
+			for( var i = 0; i < vs.length; i++ ) {
+				var v = vs[i], r = row(v);
+				r.appendChild(td('villageName', vlink(v, '/build.php?newdid=' + v.did + '&gid=46')));
+				r.appendChild(jobCell(v, [46,48], 'inProgress'));
+				for( var k = 0; k < 6; k++ ) r.appendChild(none('none'));
+				body.appendChild(r);
+			}
+			t.appendChild(body);
+			return t;
+		},
+		training: function ( vs ) {
+			var gids = [19,20,21];
+			for( var i = 0; i < vs.length; i++ ) {
+				if( vs[i].dorf2[5] != 0 && gids.indexOf(29) < 0 ) gids.push(29);
+				if( vs[i].dorf2[6] != 0 && gids.indexOf(30) < 0 ) gids.push(30);
+			}
+			gids.push(46);
+			var heads = [$ee('th', T.village)];
+			for( var g = 0; g < gids.length; g++ ) heads.push($ee('th', $e('i',[['class','building_small tribe'+tribe+' type'+gids[g]]]), [['class','unit']]));
+			var t = $e('table',[['cellpadding','1'],['cellspacing','1'],['class','under_progress']]);
+			t.appendChild($ee('thead', $em('tr', heads)));
+			var body = $e('tbody');
+			for( var i = 0; i < vs.length; i++ ) {
+				var v = vs[i], r = row(v);
+				r.appendChild(td('villageName', vlink(v, '/build.php?newdid=' + v.did)));
+				for( var g = 0; g < gids.length; g++ ) r.appendChild(jobCell(v, gids[g] == 46 ? [46,48] : [gids[g]]));
+				body.appendChild(r);
+			}
+			t.appendChild(body);
+			return t;
+		}
+	};
+
+	// key of a table row: the village id of its link, 'sum' for the total row
+	function rowKey ( r ) {
+		var a = r.querySelector('a[href*="newdid="]');
+		if( a ) return a.getAttribute('href').match(/newdid=(\d+)/)[1];
+		return r.classList.contains('sum') ? 'sum' : '';
+	}
+	// keep the cells the server filled with real values
+	function merge ( built, server ) {
+		var rows = built.querySelectorAll('tbody tr');
+		for( var i = 0; i < rows.length; i++ ) {
+			var sr = server[rowKey(rows[i])];
+			if( ! sr ) continue;
+			for( var k = 1; k < rows[i].cells.length && k < sr.cells.length; k++ ) {
+				var txt = sr.cells[k].textContent.trim();
+				if( txt != '' && txt.indexOf('?') < 0 ) rows[i].replaceChild(sr.cells[k].cloneNode(true), rows[i].cells[k]);
+			}
+		}
+	}
+
+	var naviSpacer = content.querySelector('.navigationSpacer');
+	var serverTable = content.querySelector('#overview');
+	if( ! naviSpacer || ! serverTable ) return;
+	var server = {};
+	var rows = serverTable.querySelectorAll('tbody tr');
+	for( var r = 0; r < rows.length; r++ ) {
+		var k = rowKey(rows[r]);
+		if( k && ! server[k] ) server[k] = rows[r];
+	}
+
+	function subNavi ( tab, sub ) {
+		var navi = $e('div',[['class','contentNavi tabNavi ']]);
+		for( var i = 0; i < subTabs[tab].length; i++ ) {
+			var key = subTabs[tab][i][0];
+			var a = $ee('a', subTabs[tab][i][1], [['class','tabItem'],['href','/village/statistics/' + tab + '/' + key]]);
+			a.addEventListener('click', function(k) { return function(e) { e.preventDefault(); show(tab, k); }}(key), false);
+			navi.appendChild($em('div', [$ee('div','&nbsp;',[['class','background-start']]), $ee('div','&nbsp;',[['class','background-end']]),
+				$ee('div', a, [['class','content favor favorKey' + key]])], [['title',''],['class','container ' + (key == sub ? 'active' : 'normal')]]));
+		}
+		navi.appendChild($e('div',[['class','clear']]));
+		return navi;
+	}
+	var tabLinks = [];
+	function show ( tab, sub ) {
+		var nodes = [];
+		if( subTabs[tab] ) {
+			if( ! sub ) sub = subTabs[tab][0][0];
+			nodes.push(subNavi(tab, sub));
+		}
+		now = Math.round(Date.now()/1000);
+		var built = build[sub || tab](villages());
+		if( ! (built instanceof Array) ) built = [built];
+		if( tab == 'overview' ) merge(built[0], server);
+		var parent = naviSpacer.parentNode;
+		while( naviSpacer.nextSibling ) parent.removeChild(naviSpacer.nextSibling);
+		$am(parent, nodes.concat(built));
+		content.className = 'village3 village3' + contentClass[tab];
+		for( var i = 0; i < tabLinks.length; i++ ) tabLinks[i][1].className = 'tabItem ' + (tabLinks[i][0] == tab ? 'active' : 'normal') + ' ';
+	}
+
+	// the tabs other than the overview open the Plus shop: make them switch the tab in place
+	var links = content.querySelectorAll('.subNavi .tabItem');
+	for( var i = 0; i < links.length; i++ ) {
+		var key = (links[i].parentNode.className.match(/favorKey(\w+)/) || [])[1];
+		if( ! contentClass[key] ) continue;
+		links[i].removeAttribute('onclick');
+		links[i].setAttribute('href', '/village/statistics/' + key);
+		links[i].addEventListener('click', function(k) { return function(e) { e.preventDefault(); show(k); }}(key), false);
+		tabLinks.push([key, links[i]]);
+	}
+	show('overview');
+	vstatTimer = setInterval(vstatTick, 1000);
 }
 
 /************************** center number ****************************/
@@ -9956,7 +10353,6 @@ function displayWhatIsNew () {
 	if( /dorf1.php/.test(crtPath) ) { troopsDorf1(); normalizeProduction(); }
 	villageHintEdit();
 	if( /dorf2.php/.test(crtPath) ) { parseDorf2(); if( RB.Setup[37] > 0 ) villageBMover(); }
-	if( /village\/statistics/.test(crtPath) ) { villageHintDorf3(); }
 	if( /(?:messages|report)/.test(crtPath) ) { viewMessageIW(); messagesTopButtons(); }
 	if( /report/.test(crtPath) ) reportsDelOrSearch(); else if( RB.overview[0] < -2 ) { RB.overview[0] = -1; saveCookie('OV', 'overview'); }
 	if( /messages\//.test(crtPath) ) { convertCoordsInMessagesToLinks(); }
@@ -9982,6 +10378,7 @@ function displayWhatIsNew () {
 
 	setTimeout( function() { progressbar_updValues(); setInterval(progressbar_updValues, 1000); }, (1000-progressbar_time-((Date.now())-RunTime[0])));
 	if( RB.Setup[16] != 0) { bigQuickLinks(); }
+	villageStatistics();
 	const mutationCallback = (mutationsList, observer) => {
 		for (const mutation of mutationsList) {
 		if (mutation.type === 'childList') {
